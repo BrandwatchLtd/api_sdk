@@ -15,7 +15,7 @@ From the user's perspective, the basic structure of the SDK is as follows.  One 
 
 You can now install bwapi on your machine by running the following command:
 
-pip install -e /filepath_to_brandwatch_api
+pip install bwapi
 
 This allows you to run scripts that import bwproject or bwresources from anywhere on your computer.  
 
