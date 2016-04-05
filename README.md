@@ -22,3 +22,7 @@ This allows you to run scripts that import bwproject or bwresources from anywher
 ## Examples
 
 Please see the Jupyter notebook DEMO.ipynb for examples.  This notebook was built as a beginner's guide to using the Brandwatch API SDK, so it has example code, as well as detailed instructions for use.
+
+## Disclaimer
+
+This is not an official or supported Brandwatch library, and should be implemented at the users' own risk. 
