@@ -1054,23 +1054,41 @@ class BWCategories():
 
     def delete(self, name):
         """
-        Deletes a category.
+        Deletes an entire parent category or subcategory.
 
         Args:
-            name:   Category name.
+            name:   Category name if you wish to delete an entire parent category or a dictionary of the form {name: parentname, children: [child1todelete, child2todelete, ...]}, if you wish to delete a subcategory or list of subcateogries.
         """
         self.delete_all([name])
 
     def delete_all(self, names):
         """
-        Deletes a list of categories.
+        Deletes a list of categories or subcategories.  
+        If you're deleting the entire parent category then you can pass in a simple list of parent category names.  If you're deleting subcategories, then you need to pass in a list of dictionaries in the format: {name: parentname, children: [child1todelete, child2todelete, ...]}
 
         Args:
-            names:   List of category names.
+            names:   List of parent category names to delete or dictionary with subcategories to delete.
         """
-        for name in names:
-            if name in self.ids:
-                self.project.delete(endpoint = "categories/" + str(self.ids[name]["id"]))
+        for item in names:
+            if isinstance(item, str):
+                if item in self.ids:
+                    self.project.delete(endpoint = "categories/" + str(self.ids[item]["id"]))
+            elif isinstance(item, dict):
+                if item["name"] in self.ids:
+                    name = item["name"]  
+                    updated_children = []
+                    existing_children = list(self.ids[name]["children"])
+
+                    for child in existing_children:
+                        if child not in item["children"]:
+                            updated_children.append(child)
+
+                    data = {"name": name,
+                            "children": updated_children,
+                            "multiple": self.ids[name]["multiple"]}
+
+                    filled_data = self._fill_data(data) 
+                    self.project.put(endpoint = "categories/" + str(self.ids[name]["id"]), data = filled_data)
         self.reload()
 
     def clear_all_in_project(self):
@@ -1262,7 +1280,6 @@ class BWRules(BWResource):
     	rules = []
     	for rule in ruledata:
     		name = rule.get("name")
-    		print(name)
     		queries = rule.get("queryName")
     		if queries is None: #scope = project, so specific queries are not listed
     			queries = "Whole Project"
