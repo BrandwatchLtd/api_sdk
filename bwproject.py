@@ -2,6 +2,7 @@
 bwproject contains the BWUser and BWProject classes
 """
 
+import os
 import requests
 import time
 
@@ -85,8 +86,11 @@ class BWUser:
         raise KeyError("Token not found in file: " + token_path)
 
     def _write_token(self, token_path):
-        with open(token_path, "r") as token_file:
-            current = token_file.read()
+        if os.path.isfile(token_path):
+            with open(token_path, "r") as token_file:
+                current = token_file.read()
+        else:
+            current = ''
 
         with open(token_path, "w") as token_file:
             token_file.write(self.username + " " + self.token + "\n" + current)
