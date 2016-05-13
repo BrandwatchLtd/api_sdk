@@ -1,14 +1,14 @@
 """
 bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCategories, BWSiteLists, BWAuthorLists, BWLocationLists, and BWSignals classes.
 """
- 
+
 import json
 import datetime
 import filters
 import requests
 
-class BWResource:
 
+class BWResource:
     """
     This class is a superclass for brandwatch resources (queries, groups, mentions, tags, sitelists, authorlists, locationlists and signals). 
 
@@ -41,14 +41,14 @@ class BWResource:
         Raises:
             KeyError: If there was an error with the request for resource information.
         """
-        response = self.project.get(endpoint = self.general_endpoint) 
+        response = self.project.get(endpoint=self.general_endpoint)
 
         if "results" not in response:
             raise KeyError("Could not retrieve" + self.resource_type, response)
 
         self.ids = {resource["name"]: resource["id"] for resource in response["results"]}
 
-    def get(self, name = None):
+    def get(self, name=None):
         """
         If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.  
         If you do not specify a name, this function will retrieve all information for all resources of that type as they are stored in Brandwatch.
@@ -63,14 +63,14 @@ class BWResource:
             All information for the specified resource, or a list of information on every resource of that type in the account.
         """
         if not name:
-            return self.project.get(endpoint = self.general_endpoint)["results"]
+            return self.project.get(endpoint=self.general_endpoint)["results"]
         elif name not in self.ids:
             raise KeyError("Could not find " + self.resource_type + ": " + name, self.ids)
         else:
             resource_id = self.ids[name]
-            return self.project.get(endpoint = self.specific_endpoint+ "/" + str(resource_id))
+            return self.project.get(endpoint=self.specific_endpoint + "/" + str(resource_id))
 
-    def upload(self, create_only = False, modify_only = False, **kwargs):
+    def upload(self, create_only=False, modify_only=False, **kwargs):
         """
         Uploads a resource.
 
@@ -85,7 +85,7 @@ class BWResource:
         """
         return self.upload_all([kwargs], create_only, modify_only)
 
-    def upload_all(self, data_list, create_only = False, modify_only = False):
+    def upload_all(self, data_list, create_only=False, modify_only=False):
         """
         Uploads a list of resources.
 
@@ -100,16 +100,16 @@ class BWResource:
         resources = {}
 
         for data in data_list:
-            #eventually make _fill_data() a BWResource func
+            # eventually make _fill_data() a BWResource func
             filled_data = self._fill_data(data)
             name = data["name"]
 
             if name in self.ids and not create_only:
-                response = self.project.put(endpoint = self.specific_endpoint + "/" + str(self.ids[name]),
-                                            data = filled_data)
+                response = self.project.put(endpoint=self.specific_endpoint + "/" + str(self.ids[name]),
+                                            data=filled_data)
             elif name not in self.ids and not modify_only:
-                response = self.project.post(endpoint = self.specific_endpoint,
-                                             data = filled_data)
+                response = self.project.post(endpoint=self.specific_endpoint,
+                                             data=filled_data)
             else:
                 continue
 
@@ -141,7 +141,7 @@ class BWResource:
         for name in names:
             if name in self.ids:
                 resource_id = self.ids[name]
-                self.project.delete(endpoint = self.specific_endpoint + "/" + str(resource_id))
+                self.project.delete(endpoint=self.specific_endpoint + "/" + str(resource_id))
 
                 if self.console_report:
                     print(self.resource_type + ": " + name + " deleted")
@@ -151,12 +151,13 @@ class BWResource:
     def _fill_data():
         raise NotImplementedError
 
+
 class BWMentionsResource:
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access mentions.
     """
 
-    def get_mentions(self, max_pages = -1, **kwargs):
+    def get_mentions(self, max_pages=-1, **kwargs):
         """
         Retrieves a list of mentions.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
@@ -179,24 +180,24 @@ class BWMentionsResource:
         while max_pages == -1 or counter < max_pages:
 
             params["page"] = counter
-            mentions = self.project.get(endpoint = "data/mentions/fulltext", params = params)
+            mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
 
             if "errors" in mentions:
-                raise KeyError ("get mentions failed", mentions)
+                raise KeyError("get mentions failed", mentions)
 
             if len(mentions["results"]) > 0:
                 all_mentions.extend(mentions["results"])
 
                 if self.console_report:
                     print("Page " + str(counter) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
-                    
+
             else:
                 break
 
             counter += 1
 
         if self.console_report:
-            print (str(len(all_mentions)) + " mentions downloaded")
+            print(str(len(all_mentions)) + " mentions downloaded")
         return all_mentions
 
     def num_mentions(self, **kwargs):
@@ -211,7 +212,7 @@ class BWMentionsResource:
         """
         params = self._fill_mentions_params(kwargs)
         params["pageSize"] = 1
-        return self.project.get(endpoint = "data/mentions/count", params = params)
+        return self.project.get(endpoint="data/mentions/count", params=params)
 
     def _fill_mentions_params(self, data):
 
@@ -225,7 +226,8 @@ class BWMentionsResource:
         filled = {}
         filled[self.resource_id_name] = self.ids[data["name"]]
         filled["startDate"] = data["startDate"]
-        filled["endDate"] = data["endDate"] if "endDate" in data else (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        filled["endDate"] = data["endDate"] if "endDate" in data else (
+            datetime.date.today() + datetime.timedelta(days=1)).isoformat()
         filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
 
         for param in data:
@@ -244,6 +246,7 @@ class BWMentionsResource:
             return False
         else:
             return True
+
 
 class BWQueries(BWResource, BWMentionsResource):
     """
@@ -269,8 +272,7 @@ class BWQueries(BWResource, BWMentionsResource):
         self.tags = BWTags(self.project)
         self.categories = BWCategories(self.project)
 
-
-    def upload(self, create_only = False, modify_only = False, backfill_date = "", **kwargs):
+    def upload(self, create_only=False, modify_only=False, backfill_date="", **kwargs):
         """
         Uploads a query.
 
@@ -285,7 +287,7 @@ class BWQueries(BWResource, BWMentionsResource):
         """
         return self.upload_all([kwargs], create_only, modify_only, backfill_date)
 
-    def upload_all(self, data_list, create_only = False, modify_only = False, backfill_date = ""):
+    def upload_all(self, data_list, create_only=False, modify_only=False, backfill_date=""):
         """
         Uploads multiple queries.
 
@@ -302,7 +304,7 @@ class BWQueries(BWResource, BWMentionsResource):
             The uploaded query information in a dictionary of the form {query1name: query1id, query2name: query2id, ...}
         """
 
-        queries = super(BWQueries, self).upload_all(data_list, create_only = False, modify_only = False)
+        queries = super(BWQueries, self).upload_all(data_list, create_only=False, modify_only=False)
 
         if backfill_date != "":
             for query in queries:
@@ -311,81 +313,81 @@ class BWQueries(BWResource, BWMentionsResource):
         return queries
 
     def upload_channel(self, **kwargs):
-    	"""
-    	Uploads a channel.
+        """
+        Uploads a channel.
 
-    	Args:
-    		kwargs:	You must pass in name, handle and channel_type.
+        Args:
+            kwargs:	You must pass in name, handle and channel_type.
 
-    	Returns:
-    		The uploaded channel information in a dictionary of the form {channel1name: channel1id}
-    	"""
-    	return self.upload_all_channel([kwargs])
+        Returns:
+            The uploaded channel information in a dictionary of the form {channel1name: channel1id}
+        """
+        return self.upload_all_channel([kwargs])
 
     def upload_all_channel(self, query_data_list):
-    	"""
-    	Uploads a list of channels.
+        """
+        Uploads a list of channels.
 
-    	Args:
-    		query_data_list:	You must pass in a dictionary of the form {name: channelname, handle: channelhandle, channel_type: twitter/facebook}.
+        Args:
+            query_data_list:	You must pass in a dictionary of the form {name: channelname, handle: channelhandle, channel_type: twitter/facebook}.
 
-    	Raise:
-    		KeyError:	If you fail to pass in name, handle or channel_type for any of the channels in the query_data_list.
-    		KeyError:	If you pass channel_type = facebook.  We cannot support automated Facebook channel uploads at this time.
-    		KeyError:	If you pass in channel_type other than twitter or facebook.
+        Raise:
+            KeyError:	If you fail to pass in name, handle or channel_type for any of the channels in the query_data_list.
+            KeyError:	If you pass channel_type = facebook.  We cannot support automated Facebook channel uploads at this time.
+            KeyError:	If you pass in channel_type other than twitter or facebook.
 
-    	Returns:
-    		The uploaded channel information in a dictionary of the form {channel1name: channel1id, channel2name: channel2id, ...}
-    	"""
+        Returns:
+            The uploaded channel information in a dictionary of the form {channel1name: channel1id, channel2name: channel2id, ...}
+        """
 
-    	returnMess = {}
-    	for channel in query_data_list:
-    		if ("name" not in channel) or ("handle" not in channel) or ("channel_type" not in channel):
-    			raise KeyError("You must pass a name, a handle and a channel_type to upload a channel")
+        returnMess = {}
+        for channel in query_data_list:
+            if ("name" not in channel) or ("handle" not in channel) or ("channel_type" not in channel):
+                raise KeyError("You must pass a name, a handle and a channel_type to upload a channel")
 
-    		if channel["channel_type"] in ["twitter", "Twitter", "TWITTER"]:
-    			userId = self.project.bare_request(verb = requests.get,
-    											address_root = "http://app.brandwatch.net/",
-    											address_suffix = "twitterapi/users/show.json",
-    											params = {"screen_name": channel["handle"]})["id_str"]
+            if channel["channel_type"] in ["twitter", "Twitter", "TWITTER"]:
+                userId = self.project.bare_request(verb=requests.get,
+                                                   address_root="http://app.brandwatch.net/",
+                                                   address_suffix="twitterapi/users/show.json",
+                                                   params={"screen_name": channel["handle"]})["id_str"]
 
-    			params = {"confirm": "false"}
-    			data = json.dumps({"name": channel["name"],
-    								"twitterScreenName": channel["handle"],
-    								"twitterUserId": userId,
-    								"industry": "general-(recommended)"})
+                params = {"confirm": "false"}
+                data = json.dumps({"name": channel["name"],
+                                   "twitterScreenName": channel["handle"],
+                                   "twitterUserId": userId,
+                                   "industry": "general-(recommended)"})
 
-    			response = self.project.post(endpoint = "twitterqueries",
-    										data = data,
-    										params = params)
+                response = self.project.post(endpoint="twitterqueries",
+                                             data=data,
+                                             params=params)
 
-    		elif channel["channel_type"] in ["facebook", "Facebook", "FACEBOOK"]:
-    			raise KeyError("We cannot support automated Facebook channel uploads at this time.")
+            elif channel["channel_type"] in ["facebook", "Facebook", "FACEBOOK"]:
+                raise KeyError("We cannot support automated Facebook channel uploads at this time.")
 
-    			#IN PROGRESS
-    			# params = {"facebookConsumerKey": "",
-    			# 		"facebookPageName": ""}
+            # IN PROGRESS
+            # params = {"facebookConsumerKey": "",
+            # 		"facebookPageName": ""}
 
-    			# data = json.dumps({"facebookPageId": "",
-    			# 				"facebookPageName": "",
-    			# 				"facebookPageURL": "https://www.facebook.com/"+channel["name"]+"/",
-    			# 				"industry": "general-(recommended)",
-    			# 				"name": channel["name"],
-    			# 				"type": "publicfacebook"})
+            # data = json.dumps({"facebookPageId": "",
+            # 				"facebookPageName": "",
+            # 				"facebookPageURL": "https://www.facebook.com/"+channel["name"]+"/",
+            # 				"industry": "general-(recommended)",
+            # 				"name": channel["name"],
+            # 				"type": "publicfacebook"})
 
-    			# response = self.project.post(endpoint = "facebookqueries",
-    			# 							data = data,
-    			# 							params = params)
-    		else:
-    			raise KeyError("You must specify if the channel_type is twitter or facebook.")
+            # response = self.project.post(endpoint = "facebookqueries",
+            # 							data = data,
+            # 							params = params)
+            else:
+                raise KeyError("You must specify if the channel_type is twitter or facebook.")
 
-    		if "errors" not in response:
-    			returnMess[response["name"]] = response["id"]
-    		elif self.console_report:
-    			print (response)
+            if "errors" not in response:
+                returnMess[response["name"]] = response["id"]
+            elif self.console_report:
+                print(response)
 
-    	self.reload()
-    	return returnMess
+        self.reload()
+        return returnMess
 
     def backfill(self, query_id, backfill_date):
         """
@@ -400,17 +402,17 @@ class BWQueries(BWResource, BWMentionsResource):
         """
         backfill_endpoint = "queries/" + str(query_id) + "/backfill"
         backfill_data = {"minDate": backfill_date, "queryId": query_id}
-        return self.project.post(endpoint = backfill_endpoint, data = json.dumps(backfill_data))
-    
+        return self.project.post(endpoint=backfill_endpoint, data=json.dumps(backfill_data))
+
     def _name_to_id(self, attribute, setting):
 
         if isinstance(setting, int):
-            #already in ID form
+            # already in ID form
             return setting
 
         elif attribute in ["category", "xcategory"]:
-            #setting is a dictionary with one key-value pair, so this loop iterates only once 
-            #but is necessary to extract the values in the dictionary
+            # setting is a dictionary with one key-value pair, so this loop iterates only once
+            # but is necessary to extract the values in the dictionary
             ids = []
             for category in setting:
                 parent = category
@@ -485,10 +487,11 @@ class BWQueries(BWResource, BWMentionsResource):
         filled["samplePercent"] = data["samplePercent"] if "samplePercent" in data else 100
         filled["languageAgnostic"] = data["languageAgnostic"] if "languageAgnostic" in data else False
 
-        #validating the query search - comment this out to skip validation
-        self.project.validate_query_search(query = filled["includedTerms"], language = filled["languages"])
+        # validating the query search - comment this out to skip validation
+        self.project.validate_query_search(query=filled["includedTerms"], language=filled["languages"])
 
         return json.dumps(filled)
+
 
 class BWGroups(BWResource, BWMentionsResource):
     """
@@ -517,13 +520,14 @@ class BWGroups(BWResource, BWMentionsResource):
         self.tags = self.queries.tags
         self.categories = self.queries.categories
 
-    def upload_queries_as_group(self, group_name, query_data_list, create_only = False, modify_only = False, backfill_date = "", **kwargs):
+    def upload_queries_as_group(self, group_name, query_data_list, create_only=False, modify_only=False,
+                                backfill_date="", **kwargs):
         """
         Uploads a list of queries and saves them as a group.
 
         Args:
             group_name:         Name of the group.
-            data_list:          List of dictionaries, where each dictionary includes the information for one query in the following format {name: queryname, includedTerms: searchstring}
+            query_data_list:    List of dictionaries, where each dictionary includes the information for one query in the following format {name: queryname, includedTerms: searchstring}
             create_only:        If True and the group already exists, no action will be triggered - Optional.  Defaults to False.
             modify_only:        If True and the group does not exist, no action will be triggered - Optional.  Defaults to False.
             backfill_date:      Date which you'd like to backfill the queries too (yyyy-mm-dd) - Optional.
@@ -543,7 +547,7 @@ class BWGroups(BWResource, BWMentionsResource):
         Args:
             name:   Name of the group that you'd like to delete.
         """
-        #No need to delete the group itself, since a group will be deleted automatically when empty
+        # No need to delete the group itself, since a group will be deleted automatically when empty
         BWQueries(self.project).delete_all(self.get_group_queries(name))
 
         if self.console_report:
@@ -564,12 +568,12 @@ class BWGroups(BWResource, BWMentionsResource):
     def _name_to_id(self, attribute, setting):
 
         if isinstance(setting, int):
-            #already in ID form
+            # already in ID form
             return setting
 
         elif attribute in ["category", "xcategory"]:
-            #setting is a dictionary with one key-value pair, so this loop iterates only once 
-            #but is necessary to extract the values in the dictionary
+            # setting is a dictionary with one key-value pair, so this loop iterates only once
+            # but is necessary to extract the values in the dictionary
             ids = []
             for category in setting:
                 parent = category
@@ -640,9 +644,11 @@ class BWGroups(BWResource, BWMentionsResource):
         queries = data["queries"]
         filled["queries"] = [{"name": q, "id": self.queries.ids[q]} for q in queries]
         filled["shared"] = data["shared"] if "shared" in data else "public"
-        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [self.project.project_id]
+        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [
+            self.project.project_id]
         filled["users"] = data["users"] if "users" in data else [{"id": self.project.get_self()["id"]}]
         return json.dumps(filled)
+
 
 class BWMentions:
     """
@@ -680,37 +686,37 @@ class BWMentions:
             KeyError:   If you pass in an invalid action or setting.
             KeyError:   If there is an error when attempting to edit the mentions.
         """
-        
-        #add cats and tags if they don't exist
+
+        # add cats and tags if they don't exist
         if action in ["addCategories", "removeCategories"]:
-            #the following loop is only one iteration
+            # the following loop is only one iteration
             for category in setting:
                 parent = category
                 children = setting[category]
 
-            self.categories.upload(name = parent, children = children)
+            self.categories.upload(name=parent, children=children)
             setting = []
             for child in children:
                 setting.append(self.categories.ids[parent]["children"][child])
 
         elif action in ["addTag", "removeTag"]:
             for s in setting:
-                self.tags.upload(name = s, create_only = True)
+                self.tags.upload(name=s, create_only=True)
 
         filled_data = []
         for mention in mentions:
-        	if action in filters.mutable and self._valid_patch_input(action, setting):
-        		filled_data.append(self._fill_mention_data(mention = mention, action = action, setting = setting))
-        	else:
-        		raise KeyError("invalid action or setting", action, setting)
-        response = self.project.patch(endpoint = "data/mentions", data = json.dumps(filled_data))
+            if action in filters.mutable and self._valid_patch_input(action, setting):
+                filled_data.append(self._fill_mention_data(mention=mention, action=action, setting=setting))
+            else:
+                raise KeyError("invalid action or setting", action, setting)
+        response = self.project.patch(endpoint="data/mentions", data=json.dumps(filled_data))
 
         if "errors" in response:
-        	raise KeyError("patch failed", response)
+            raise KeyError("patch failed", response)
 
         if self.console_report:
-        	print (str(len(response)) + " mentions updated")
-    
+            print(str(len(response)) + " mentions updated")
+
     def _valid_patch_input(self, action, setting):
         """ internal use """
         if not isinstance(setting, filters.mutable[action]):
@@ -722,7 +728,7 @@ class BWMentions:
 
     def _fill_mention_data(self, **data):
         """ internal use """
-        #pass in mention, filter_type, setting
+        # pass in mention, filter_type, setting
         filled = {}
 
         filled["queryId"] = data["mention"]["queryId"]
@@ -731,9 +737,10 @@ class BWMentions:
         if data["action"] in filters.mutable:
             filled[data["action"]] = data["setting"]
         else:
-        	raise KeyError("not a mutable field", data["action"])
+            raise KeyError("not a mutable field", data["action"])
 
         return filled
+
 
 class BWAuthorLists(BWResource):
     """
@@ -751,11 +758,11 @@ class BWAuthorLists(BWResource):
             name:   Name of the author list to edit.
             items:  List of new authors to add.
         """
-        prev_list = set(self.get(name)["authors"])    
+        prev_list = set(self.get(name)["authors"])
         prev_list.update(items)
         new_list = list(prev_list)
-        
-        self.upload(name = name, authors = new_list)
+
+        self.upload(name=name, authors=new_list)
 
     def _fill_data(self, data):
         filled = {}
@@ -774,11 +781,13 @@ class BWAuthorLists(BWResource):
         filled["authors"] = data["authors"]
 
         filled["shared"] = data["shared"] if "shared" in data else "public"
-        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [self.project.project_id]
+        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [
+            self.project.project_id]
 
         filled["userName"] = self.project.username
         filled["userId"] = self.project.get_self()["id"]
         return json.dumps(filled)
+
 
 class BWSiteLists(BWResource):
     """
@@ -797,11 +806,11 @@ class BWSiteLists(BWResource):
             name:   Name of the site list to edit.
             items:  List of new sites to add.
         """
-        prev_list = set(self.get(name)["domains"])    
+        prev_list = set(self.get(name)["domains"])
         prev_list.update(items)
         new_list = list(prev_list)
 
-        self.upload(name = name, domains = new_list)
+        self.upload(name=name, domains=new_list)
 
     def _fill_data(self, data):
         filled = {}
@@ -820,11 +829,13 @@ class BWSiteLists(BWResource):
         filled["domains"] = data["domains"]
 
         filled["shared"] = data["shared"] if "shared" in data else "public"
-        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [self.project.project_id]
+        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [
+            self.project.project_id]
 
         filled["userName"] = self.project.username
         filled["userId"] = self.project.get_self()["id"]
         return json.dumps(filled)
+
 
 class BWLocationLists(BWResource):
     """
@@ -842,12 +853,12 @@ class BWLocationLists(BWResource):
             name:   Name of the location list to edit.
             items:  List of new locations to add.
         """
-        prev_list = self.get(name)["locations"]  
+        prev_list = self.get(name)["locations"]
         new_list = prev_list
         for item in items:
             new_list.append(item)
 
-        self.upload(name = name, locations = new_list)
+        self.upload(name=name, locations=new_list)
 
     def _fill_data(self, data):
         filled = {}
@@ -866,11 +877,13 @@ class BWLocationLists(BWResource):
         filled["locations"] = data["locations"]
 
         filled["shared"] = data["shared"] if "shared" in data else "public"
-        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [self.project.project_id]
+        filled["sharedProjectIds"] = data["sharedProjectIds"] if "sharedProjectIds" in data else [
+            self.project.project_id]
 
         filled["userName"] = self.project.username
         filled["userId"] = self.project.get_self()["id"]
         return json.dumps(filled)
+
 
 class BWTags(BWResource):
     """
@@ -881,7 +894,6 @@ class BWTags(BWResource):
     specific_endpoint = "tags"
     resource_type = "tags"
 
-
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project. """
         self.delete_all(list(self.ids))
@@ -890,7 +902,7 @@ class BWTags(BWResource):
         filled = {}
 
         if ("name" not in data):
-            raise KeyError("Need name to upload "+ self.parameter, data)
+            raise KeyError("Need name to upload " + self.parameter, data)
 
         if "new_name" in data:
             filled["id"] = self.ids.get(data["name"])
@@ -899,6 +911,7 @@ class BWTags(BWResource):
             filled["name"] = data["name"]
 
         return json.dumps(filled)
+
 
 class BWCategories():
     """
@@ -923,20 +936,20 @@ class BWCategories():
         self.project = bwproject
         self.console_report = bwproject.console_report
         self.ids = {}
-        self.reload()  
+        self.reload()
 
     def reload(self):
         """
         Refreshes category.ids.
 
         This function is used internally after editing any categories (e.g. uploading) so that our local copy of the id information matches the system's.
-        The only potential danger is that someone else is editing categories at the same time you are - in which case your local copy could differ from the system's.  
+        The only potential danger is that someone else is editing categories at the same time you are - in which case your local copy could differ from the system's.
         If you fear this has happened, you can call reload() directly.
 
         Raises:
             KeyError: If there was an error with the request for category information.
         """
-        response = self.project.get(endpoint = "categories")
+        response = self.project.get(endpoint="categories")
 
         if "results" not in response:
             raise KeyError("Could not retrieve categories", response)
@@ -951,7 +964,7 @@ class BWCategories():
                                          "multiple": cat["multiple"],
                                          "children": children}
 
-    def upload(self, create_only = False, modify_only = False, overwrite_children = False, **kwargs):
+    def upload(self, create_only=False, modify_only=False, overwrite_children=False, **kwargs):
         """
         Uploads a category.
 
@@ -968,8 +981,7 @@ class BWCategories():
         """
         return self.upload_all([kwargs], create_only, modify_only, overwrite_children)
 
-    
-    def upload_all(self, data_list, create_only = False, modify_only = False, overwrite_children = False):
+    def upload_all(self, data_list, create_only=False, modify_only=False, overwrite_children=False):
         """
         Uploads a list of categories.
 
@@ -990,12 +1002,12 @@ class BWCategories():
         """
         for data in data_list:
             if ("name" not in data):
-                raise KeyError("Need name to upload "+ self.parameter, data)
+                raise KeyError("Need name to upload " + self.parameter, data)
             elif ("children" not in data):
                 raise KeyError("Need children to upload categories", data)
             else:
                 name = data["name"]
-            
+
             if name in self.ids and not create_only:
 
                 new_children = []
@@ -1010,17 +1022,17 @@ class BWCategories():
                         for child in self.ids[name]["children"]:
                             # don't append or else the data object will be affected outside of this function
                             data["children"] = data["children"] + [child]
-                    
-                    filled_data = self._fill_data(data) 
-                    self.project.put(endpoint = "categories/" + str(self.ids[name]["id"]), data = filled_data)
+
+                    filled_data = self._fill_data(data)
+                    self.project.put(endpoint="categories/" + str(self.ids[name]["id"]), data=filled_data)
                 elif "new_name" in data:
-                    filled_data = self._fill_data(data) 
-                    self.project.put(endpoint = "categories/" + str(self.ids[name]["id"]), data = filled_data)
+                    filled_data = self._fill_data(data)
+                    self.project.put(endpoint="categories/" + str(self.ids[name]["id"]), data=filled_data)
                     name = data["new_name"]
 
             elif name not in self.ids and not modify_only:
-                filled_data = self._fill_data(data) 
-                self.project.post(endpoint = "categories", data = filled_data)
+                filled_data = self._fill_data(data)
+                self.project.post(endpoint="categories", data=filled_data)
             else:
                 continue
 
@@ -1050,7 +1062,8 @@ class BWCategories():
             raise KeyError("Cannot rename a category which does not exist", name)
         else:
             children = list(self.ids[name]["children"])
-            self.upload(name=name, new_name = new_name, id=self.ids[name]["id"], multiple=self.ids[name]["multiple"], children=children)
+            self.upload(name=name, new_name=new_name, id=self.ids[name]["id"], multiple=self.ids[name]["multiple"],
+                        children=children)
 
     def delete(self, name):
         """
@@ -1072,10 +1085,10 @@ class BWCategories():
         for item in names:
             if isinstance(item, str):
                 if item in self.ids:
-                    self.project.delete(endpoint = "categories/" + str(self.ids[item]["id"]))
+                    self.project.delete(endpoint="categories/" + str(self.ids[item]["id"]))
             elif isinstance(item, dict):
                 if item["name"] in self.ids:
-                    name = item["name"]  
+                    name = item["name"]
                     updated_children = []
                     existing_children = list(self.ids[name]["children"])
 
@@ -1087,15 +1100,15 @@ class BWCategories():
                             "children": updated_children,
                             "multiple": self.ids[name]["multiple"]}
 
-                    filled_data = self._fill_data(data) 
-                    self.project.put(endpoint = "categories/" + str(self.ids[name]["id"]), data = filled_data)
+                    filled_data = self._fill_data(data)
+                    self.project.put(endpoint="categories/" + str(self.ids[name]["id"]), data=filled_data)
         self.reload()
 
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL categories in the project. """
         for cat in self.ids:
             self.delete(self.ids[cat]["id"])
-                            
+
     def _fill_data(self, data):
         """ internal use """
         filled = {}
@@ -1106,12 +1119,12 @@ class BWCategories():
             filled["id"] = self.ids[data["name"]]["id"]
             filled["name"] = data["new_name"]
         else:
-        	filled["name"] = data["name"] 
+            filled["name"] = data["name"]
 
         if "multiple" in data:
-        	filled["multiple"] = data["multiple"]
+            filled["multiple"] = data["multiple"]
         else:
-        	filled["multiple"] = True
+            filled["multiple"] = True
 
         filled["children"] = []
         for child in data["children"]:
@@ -1120,8 +1133,9 @@ class BWCategories():
             else:
                 child_id = None
             filled["children"].append({"name": child,
-                                        "id": child_id})
+                                       "id": child_id})
         return json.dumps(filled)
+
 
 class BWRules(BWResource):
     """
@@ -1136,6 +1150,7 @@ class BWRules(BWResource):
     general_endpoint = "rules"
     specific_endpoint = "rules"
     resource_type = "rules"
+
     def __init__(self, bwproject):
         """
         Creates a BWRules object.
@@ -1144,13 +1159,12 @@ class BWRules(BWResource):
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         super(BWRules, self).__init__(bwproject)
-        #store queries, tags and cats as a rule attribute so you don't have to reload a million times
+        # store queries, tags and cats as a rule attribute so you don't have to reload a million times
         self.queries = BWQueries(self.project)
         self.tags = self.queries.tags
         self.categories = self.queries.categories
 
-    
-    def upload_all(self, data_list, create_only = False, modify_only = False):
+    def upload_all(self, data_list, create_only=False, modify_only=False):
         """
         Uploads a list of rules.
         Args:
@@ -1166,11 +1180,11 @@ class BWRules(BWResource):
             A dictionary of the form {rule1name: rule1id, rule2name: rule2id, ...}
         """
 
-        rules = super(BWRules, self).upload_all(data_list, create_only = False, modify_only = False)
-        
+        rules = super(BWRules, self).upload_all(data_list, create_only=False, modify_only=False)
+
         for data in data_list:
             if "backfill" in data and data["backfill"] == True:
-                self.project.post(endpoint = "rules/" + str(rules[data["name"]]) + "/backfill")
+                self.project.post(endpoint="rules/" + str(rules[data["name"]]) + "/backfill")
 
     def rule_action(self, action, setting):
         """ 
@@ -1189,28 +1203,28 @@ class BWRules(BWResource):
         	A dictionary of the form {action: setting}
         """
         if action in ["addCategories", "removeCategories"]:
-            #the following loop is only one iteration
+            # the following loop is only one iteration
             for category in setting:
                 parent = category
                 children = setting[category]
 
-            self.categories.upload(name = parent, children = children)
+            self.categories.upload(name=parent, children=children)
             setting = []
             for child in children:
                 setting.append(self.categories.ids[parent]["children"][child])
 
         elif action in ["addTag", "removeTag"]:
             for s in setting:
-                self.tags.upload(name = s, create_only = True)
+                self.tags.upload(name=s, create_only=True)
 
         if action not in filters.mutable:
-            raise KeyError ("invalid rule action", action)
+            raise KeyError("invalid rule action", action)
         elif not self._valid_action_input(action, setting):
-            raise KeyError ("invalid setting", setting)
+            raise KeyError("invalid setting", setting)
 
-        return {action:setting}
+        return {action: setting}
 
-    def filters(self, queryName = "" , **kwargs):
+    def filters(self, queryName="", **kwargs):
         """
         Prepares rule filters in a dictionary.
 
@@ -1262,43 +1276,43 @@ class BWRules(BWResource):
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project. """
         for name in self.ids:
-            self.project.delete(endpoint = "rules/" + str(self.ids[name]))
+            self.project.delete(endpoint="rules/" + str(self.ids[name]))
         self.reload()
 
     def get(self):
-    	"""
+        """
     	Retrieves all information for a list of existing rules, and formats each rule in the following way {"name":name, "queries":queries, "filter":filters, "ruleAction":ruleAction}
     	Returns:
     		List of dictionaries in the format {"name":name, "queries":queries, "filter":filters, "ruleAction":ruleAction}
     	"""
-    	ruledata = self.project.get(endpoint = "rules")
-    	if "errors" not in ruledata:
-    		ruledata = ruledata["results"]
-    	else:
-    		exit()
-    	
-    	rules = []
-    	for rule in ruledata:
-    		name = rule.get("name")
-    		queries = rule.get("queryName")
-    		if queries is None: #scope = project, so specific queries are not listed
-    			queries = "Whole Project"
+        ruledata = self.project.get(endpoint="rules")
+        if "errors" not in ruledata:
+            ruledata = ruledata["results"]
+        else:
+            exit()
 
-    		filters = {}
-    		for fil in rule["filter"]:
-    			value = rule["filter"].get(fil)
-    			if value is not None and fil != "queryId":
-    				filters[fil] = self._id_to_name(fil, value)
+        rules = []
+        for rule in ruledata:
+            name = rule.get("name")
+            queries = rule.get("queryName")
+            if queries is None:  # scope = project, so specific queries are not listed
+                queries = "Whole Project"
 
-    		ruleAction = {}
-    		for action in rule["ruleAction"]:
-    			value = rule["ruleAction"].get(action)
-    			if value is not None:
-    				ruleAction[action] = self._id_to_name(action, value)
-    				break
+            filters = {}
+            for fil in rule["filter"]:
+                value = rule["filter"].get(fil)
+                if value is not None and fil != "queryId":
+                    filters[fil] = self._id_to_name(fil, value)
 
-    		rules.append({"name":name, "queries":queries, "filter":filters, "ruleAction":ruleAction})
-    	return rules
+            ruleAction = {}
+            for action in rule["ruleAction"]:
+                value = rule["ruleAction"].get(action)
+                if value is not None:
+                    ruleAction[action] = self._id_to_name(action, value)
+                    break
+
+            rules.append({"name": name, "queries": queries, "filter": filters, "ruleAction": ruleAction})
+        return rules
 
     def _fill_data(self, data):
         """ internal use """
@@ -1306,40 +1320,40 @@ class BWRules(BWResource):
         if ("name" not in data) or ("ruleAction" not in data):
             raise KeyError("Need name to and ruleAction to upload rule", data)
 
-        #for PUT calls, need id, projectName, queryName in addition to the rest of the data below
+        # for PUT calls, need id, projectName, queryName in addition to the rest of the data below
         if data["name"] in self.ids:
             filled["id"] = self.ids[data["name"]]
             filled["projectName"] = data["projectName"] if ("projectName" in data) else self.project.project_name
             filled["queryName"] = data["queryName"] if ("queryName" in data) else None
-            
+
         filled["enabled"] = data["enabled"] if ("enabled" in data) else True
         filled["filter"] = data["filter"] if ("filter" in data) else {}
         filled["ruleAction"] = data["ruleAction"]
         filled["name"] = data["name"]
         filled["projectId"] = self.project.project_id
 
-        #validating the query search - comment this out to skip validation
+        # validating the query search - comment this out to skip validation
         if "search" in filled["filter"]:
-            self.project.validate_rule_search(query = filled["filter"]["search"], language = "en")
-        
+            self.project.validate_rule_search(query=filled["filter"]["search"], language="en")
+
         if "scope" in data:
-            filled["scope"] = data["scope"] 
+            filled["scope"] = data["scope"]
         elif "queryId" in data["filter"]:
             filled["scope"] = "query"
         else:
             filled["scope"] = "project"
 
         return json.dumps(filled)
-    
+
     def _name_to_id(self, attribute, setting):
         """ internal use """
         if isinstance(setting, int):
-            #already in ID form
+            # already in ID form
             return setting
 
         elif attribute in ["category", "xcategory"]:
-            #setting is a dictionary with one key-value pair, so this loop iterates only once 
-            #but is necessary to extract the values in the dictionary
+            # setting is a dictionary with one key-value pair, so this loop iterates only once
+            # but is necessary to extract the values in the dictionary
             for category in setting:
                 parent = category
                 child = setting[category][0]
@@ -1390,7 +1404,7 @@ class BWRules(BWResource):
 
         else:
             return setting
-    
+
     def _valid_action_input(self, action, setting):
         """ internal use """
         if not isinstance(setting, filters.mutable[action]):
@@ -1424,7 +1438,7 @@ class BWRules(BWResource):
                 if subcats:
                     names[category] = subcats
                 subcats = []
-            
+
             return names
 
         elif attribute == "parentCategory" or attribute == "xparentCategory":
@@ -1464,6 +1478,7 @@ class BWRules(BWResource):
         else:
             return setting
 
+
 class BWSignals(BWResource):
     """
     This class provides an interface for signals operations within a prescribed project (e.g. uploading, downloading).
@@ -1494,11 +1509,14 @@ class BWSignals(BWResource):
         filled = {}
 
         if ("name" not in data) or ("queries" not in data) or ("subscribers" not in data):
-                raise KeyError("Need name, queries and subscribers to create a signal", data)
-            
+            raise KeyError("Need name, queries and subscribers to create a signal", data)
+
         for subscriber in data["subscribers"]:
-            if ("emailAddress" not in subscriber) or ("notificationThreshold" not in subscriber) or (subscriber["notificationThreshold"] not in [1,2,3]):
-                raise KeyError("subscribers must be in the format {emailAddress: emailaddress, notificationThreshold: 1/2/3} where the notificationThreshold must be 1 (all signals), 2 (medium - high priority signals) or 3 (only high priority signals)", subscriber)
+            if ("emailAddress" not in subscriber) or ("notificationThreshold" not in subscriber) or (
+                        subscriber["notificationThreshold"] not in [1, 2, 3]):
+                raise KeyError(
+                    "subscribers must be in the format {emailAddress: emailaddress, notificationThreshold: 1/2/3} where the notificationThreshold must be 1 (all signals), 2 (medium - high priority signals) or 3 (only high priority signals)",
+                    subscriber)
 
         if data["name"] in self.ids:
             filled["id"] = self.ids[data["name"]]
@@ -1522,10 +1540,10 @@ class BWSignals(BWResource):
         """ internal use """
         ids = []
         if attribute in ["category", "xcategory"]:
-            
+
             for category in setting:
                 if isinstance(category, int):
-                    #already in ID form
+                    # already in ID form
                     ids.append(category)
                 else:
                     parent = category
@@ -1543,11 +1561,11 @@ class BWSignals(BWResource):
 
             for category in setting:
                 if isinstance(category, int):
-                    #already in ID form
+                    # already in ID form
                     ids.append(category)
                 else:
                     ids.append(self.categories.ids[category]["id"])
-            
+
             if attribute == "parentCategory":
                 return {"includeCategoryIds": ids}
             else:
@@ -1558,11 +1576,11 @@ class BWSignals(BWResource):
                 setting = [setting]
             for tag in setting:
                 if isinstance(tag, int):
-                    #already in ID form
+                    # already in ID form
                     ids.append(tag)
                 else:
                     ids.append(self.tags.ids[tag])
-            
+
             if attribute == "tag":
                 return {"includeTagIds": ids}
             else:

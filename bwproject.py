@@ -2,8 +2,10 @@
 bwproject contains the BWUser and BWProject classes
 """
 
+import os
 import requests
 import time
+
 
 class BWUser:
     """
@@ -17,7 +19,7 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token = None, token_path = "tokens.txt", username = None, password = None, console_report = True):
+    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
         """
         Creates a BWUser object.
 
@@ -38,7 +40,7 @@ class BWUser:
                 self._write_token(token_path)
         elif username and password:
             self._password_auth(username, password, token_path)
-            
+
             if token_path:
                 self._write_token(token_path)
         elif username:
@@ -47,7 +49,7 @@ class BWUser:
             raise KeyError("Must provide valid token, username and password, or username and path to token file")
 
     def _token_auth(self, token):
-        user = requests.get(self.apiurl + "me", params = {"access_token": token}).json()
+        user = requests.get(self.apiurl + "me", params={"access_token": token}).json()
 
         try:
             self.username = user["username"]
@@ -57,8 +59,8 @@ class BWUser:
 
     def _password_auth(self, username, password, token_path):
         token = requests.get(
-            self.apiurl + self.oauthpath, 
-            params = {
+            self.apiurl + self.oauthpath,
+            params={
                 "username": username,
                 "password": password,
                 "grant_type": "api-password",
@@ -84,8 +86,11 @@ class BWUser:
         raise KeyError("Token not found in file: " + token_path)
 
     def _write_token(self, token_path):
-        with open(token_path, "r") as token_file:
-            current = token_file.read()
+        if os.path.isfile(token_path):
+            with open(token_path, "r") as token_file:
+                current = token_file.read()
+        else:
+            current = ''
 
         with open(token_path, "w") as token_file:
             token_file.write(self.username + " " + self.token + "\n" + current)
@@ -97,13 +102,12 @@ class BWUser:
         Returns:
             List of dictionaries, where each dictionary is the information (name, id, clientName, timezone, ....) for one project.
         """
-        response = self.request(verb = requests.get, address = "projects")
+        response = self.request(verb=requests.get, address="projects")
         return response["results"] if "results" in response else response
 
     def get_self(self):
         """ Gets username and id """
-        return self.request(verb = requests.get, address = "me")
-
+        return self.request(verb=requests.get, address="me")
 
     def validate_query_search(self, **kwargs):
         """
@@ -121,7 +125,7 @@ class BWUser:
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
-        valid_search = self.request(verb = requests.get, address = "query-validation", params = kwargs)
+        valid_search = self.request(verb=requests.get, address="query-validation", params=kwargs)
         if valid_search["errors"]:
             raise KeyError("Search string error: ", valid_search["errors"])
 
@@ -141,11 +145,11 @@ class BWUser:
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
-        valid_search = self.request(verb = requests.get, address = "query-validation/searchwithin", params = kwargs)
+        valid_search = self.request(verb=requests.get, address="query-validation/searchwithin", params=kwargs)
         if valid_search["errors"]:
             raise KeyError("Search string error: ", valid_search["errors"])
 
-    def request(self, verb, address, params = {}, data = {}):
+    def request(self, verb, address, params={}, data={}):
         """
         Makes a request to the Brandwatch API.
 
@@ -158,9 +162,10 @@ class BWUser:
         Returns:
             The response json
         """
-        return self.bare_request(verb = verb, address_root = self.apiurl, address_suffix = address, access_token = self.token, params = params, data = data)
+        return self.bare_request(verb=verb, address_root=self.apiurl, address_suffix=address, access_token=self.token,
+                                 params=params, data=data)
 
-    def bare_request(self, verb, address_root, address_suffix, access_token = "", params = {}, data = {}):
+    def bare_request(self, verb, address_root, address_suffix, access_token="", params={}, data={}):
         """
         Makes a request to the Brandwatch API.
 
@@ -180,22 +185,23 @@ class BWUser:
             params["access_token"] = access_token
 
         if data == {}:
-            response = verb(address_root + address_suffix, params = params)
+            response = verb(address_root + address_suffix, params=params)
         else:
             response = verb(address_root + address_suffix,
-                            params = params,
-                            data = data,
-                            headers = {"Content-type": "application/json"})
+                            params=params,
+                            data=data,
+                            headers={"Content-type": "application/json"})
 
         if "errors" in response.json() and response.json()["errors"] and self.console_report:
             print(response.json())
 
-        #printing the response url can be helpful for debugging purposes
+        # printing the response url can be helpful for debugging purposes
         if self.console_report:
             print(response.url)
 
         return response.json()
-            
+
+
 class BWProject(BWUser):
     """
     This class is required for working with project-level resources, such as queries or groups.
@@ -206,7 +212,7 @@ class BWProject(BWUser):
         project_address:    Path to append to the Brandwatch API url to make any project level calls.
         console_report:     Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
     """
-    def __init__(self, project, token = None, token_path = "tokens.txt", username = None, password = None, console_report = True):
+    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
 
@@ -218,7 +224,8 @@ class BWProject(BWUser):
             token_path:     File path to the file where access tokens will be read from and written to - Optional.
             console_report: Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
         """
-        super().__init__(token = token, token_path = token_path, username = username, password = password, console_report = console_report)
+        super().__init__(token=token, token_path=token_path, username=username, password=password,
+                         console_report=console_report)
         self.project_name = ""
         self.project_id = -1
         self.project_address = ""
@@ -245,20 +252,20 @@ class BWProject(BWUser):
         if not project_found:
             raise KeyError("Project " + project + " not found")
 
-    def get(self, endpoint, params = {}):
+    def get(self, endpoint, params={}):
         """ 
         Makes a project level GET request 
 
         Args:
             endpoint:   Path to append to the Brandwatch project API url. Warning: project information is already included so you don't have to re-append that bit.
             params:     Additional parameters.
-            
+
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb = requests.get, address = self.project_address + endpoint, params = params)
+        return self.request(verb=requests.get, address=self.project_address + endpoint, params=params)
 
-    def delete(self, endpoint, params = {}):
+    def delete(self, endpoint, params={}):
         """ 
         Makes a project level DELETE request 
 
@@ -269,9 +276,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb = requests.delete, address = self.project_address + endpoint, params = params)
+        return self.request(verb=requests.delete, address=self.project_address + endpoint, params=params)
 
-    def post(self, endpoint, params = {}, data = {}):
+    def post(self, endpoint, params={}, data={}):
         """ 
         Makes a project level POST request 
 
@@ -283,9 +290,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb = requests.post, address = self.project_address + endpoint, params = params, data = data)
+        return self.request(verb=requests.post, address=self.project_address + endpoint, params=params, data=data)
 
-    def put(self, endpoint, params = {}, data = {}):
+    def put(self, endpoint, params={}, data={}):
         """ 
         Makes a project level PUT request 
 
@@ -297,9 +304,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb = requests.put, address = self.project_address + endpoint, params = params, data = data)
+        return self.request(verb=requests.put, address=self.project_address + endpoint, params=params, data=data)
 
-    def patch(self, endpoint, params = {}, data = {}):
+    def patch(self, endpoint, params={}, data={}):
         """ 
         Makes a project level PATCH request 
 
@@ -311,4 +318,4 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb = requests.patch, address = self.project_address + endpoint, params = params, data = data)
+        return self.request(verb=requests.patch, address=self.project_address + endpoint, params=params, data=data)
