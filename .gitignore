@@ -2,3 +2,5 @@
 .DS_Store
 /venv/
 /.idea/
+
+tokens.txt
