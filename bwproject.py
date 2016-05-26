@@ -44,7 +44,7 @@ class BWUser:
             if token_path:
                 self._write_token(token_path)
         elif username:
-            self._file_auth(username, token_path)
+            self._read_token(username, token_path)
         else:
             raise KeyError("Must provide valid token, username and password, or username and path to token file")
 
@@ -73,27 +73,28 @@ class BWUser:
         except KeyError:
             raise KeyError(token)
 
-    def _file_auth(self, username, token_path):
-        with open(token_path) as token_file:
-            for line in token_file:
-                words = line.split()
-
-                if len(words) == 2 and words[0] == username:
-                    self.username = username
-                    self.token = words[1]
-                    return
-
-        raise KeyError("Token not found in file: " + token_path)
+    def _read_token(self, username, token_path):
+        user_tokens = self._read_token_file(token_path)
+        if username in user_tokens:
+            self.token = user_tokens[username]
+        else:
+            raise KeyError("Token not found in file: " + token_path)
 
     def _write_token(self, token_path):
-        if os.path.isfile(token_path):
-            with open(token_path, "r") as token_file:
-                current = token_file.read()
-        else:
-            current = ''
-
+        user_tokens = self._read_token_file(token_path)
+        user_tokens[self.username] = self.token
         with open(token_path, "w") as token_file:
-            token_file.write(self.username + " " + self.token + "\n" + current)
+            token_file.write("\n".join(["\t".join(item) for item in user_tokens.items()]))
+
+    def _read_token_file(self, token_path):
+        user_tokens = {}
+        if os.path.isfile(token_path):
+            with open(token_path) as token_file:
+                for line in token_file:
+                    user, token = line.split()
+                    user_tokens[user] = token
+
+        return user_tokens
 
     def get_projects(self):
         """
