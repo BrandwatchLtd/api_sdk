@@ -19,7 +19,7 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
+    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client"):
         """
         Creates a BWUser object.
 
@@ -212,7 +212,7 @@ class BWProject(BWUser):
         project_address:    Path to append to the Brandwatch API url to make any project level calls.
         console_report:     Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
     """
-    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
+    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client"):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
 
@@ -225,7 +225,7 @@ class BWProject(BWUser):
             console_report: Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
         """
         super().__init__(token=token, token_path=token_path, username=username, password=password,
-                         console_report=console_report)
+                         console_report=console_report, grant_type=grant_type, client_id=client_id)
         self.project_name = ""
         self.project_id = -1
         self.project_address = ""
