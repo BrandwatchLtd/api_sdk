@@ -4,7 +4,7 @@ bwproject contains the BWUser and BWProject classes
 
 import os
 import requests
-import retrying
+from retrying import retry
 import time
 
 
@@ -166,7 +166,7 @@ class BWUser:
         return self.bare_request(verb=verb, address_root=self.apiurl, address_suffix=address, access_token=self.token,
                                  params=params, data=data)
 
-    @retry(wait_exponential_multiplier=200, wait_exponential_max=20000)
+    @retry(wait_exponential_multiplier=1000, wait_exponential_max=30000, retry_on_exception=_retry_response_error)
     def bare_request(self, verb, address_root, address_suffix, access_token="", params={}, data={}):
         """
         Makes a request to the Brandwatch API.
@@ -182,7 +182,7 @@ class BWUser:
         Returns:
             The response json
         """
-        time.sleep(.5)
+
         if access_token:
             params["access_token"] = access_token
 
@@ -194,15 +194,29 @@ class BWUser:
                             data=data,
                             headers={"Content-type": "application/json"})
 
-        if "errors" in response.json():
-            if self.console_report:
+        if "error" in response.json():
+            if "rate limit exceeded" in response.json()["error"]:
+                if self.console_report:
+                    print("Rate limit exceeded, retrying and backing off.")
+                raise Exception("Brandwatch API rate limit exceeded")
+
+            elif self.console_report:
                 print(response.json())
+
+        if "errors" in response.json() and self.console_report:
+            print(response.json())            
 
         # printing the response url can be helpful for debugging purposes
         if self.console_report:
             print(response.url)
 
         return response.json()
+
+    def _retry_response_error(exception):
+        if isinstance(exception, ConnectionError):
+            return True
+        else:
+            return False
 
 
 class BWProject(BWUser):
