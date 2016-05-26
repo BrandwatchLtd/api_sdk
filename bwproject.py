@@ -39,7 +39,7 @@ class BWUser:
             if token_path:
                 self._write_token(token_path)
         elif username and password:
-            self._password_auth(username, password, token_path)
+            self._password_auth(username, password, token_path, grant_type, client_id)
 
             if token_path:
                 self._write_token(token_path)
@@ -57,14 +57,14 @@ class BWUser:
         except KeyError:
             raise KeyError(user)
 
-    def _password_auth(self, username, password, token_path):
+    def _password_auth(self, username, password, token_path, grant_type, client_id):
         token = requests.get(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
                 "password": password,
-                "grant_type": "api-password",
-                "client_id": "brandwatch-api-client"
+                "grant_type": grant_type,
+                "client_id": client_id
             }).json()
 
         try:
