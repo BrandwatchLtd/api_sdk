@@ -31,6 +31,6 @@ setup(
 
     py_modules=['bwproject', 'bwresources', 'filters'],
 
-    install_requires=['requests']
+    install_requires=['requests', 'retrying']
 
 )

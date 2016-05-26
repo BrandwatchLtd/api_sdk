@@ -4,6 +4,7 @@ bwproject contains the BWUser and BWProject classes
 
 import os
 import requests
+import retrying
 import time
 
 
