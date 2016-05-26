@@ -166,6 +166,7 @@ class BWUser:
         return self.bare_request(verb=verb, address_root=self.apiurl, address_suffix=address, access_token=self.token,
                                  params=params, data=data)
 
+    @retry(wait_exponential_multiplier=200, wait_exponential_max=20000)
     def bare_request(self, verb, address_root, address_suffix, access_token="", params={}, data={}):
         """
         Makes a request to the Brandwatch API.
@@ -193,8 +194,9 @@ class BWUser:
                             data=data,
                             headers={"Content-type": "application/json"})
 
-        if "errors" in response.json() and response.json()["errors"] and self.console_report:
-            print(response.json())
+        if "errors" in response.json():
+            if self.console_report:
+                print(response.json())
 
         # printing the response url can be helpful for debugging purposes
         if self.console_report:
