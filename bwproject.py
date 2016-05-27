@@ -54,9 +54,9 @@ class BWUser:
             elif user["username"] == username:
                 return username, token
             else:
-                raise KeyError(user)
+                raise KeyError("Username " + username + " does not match provided token", user)
         else:
-            raise KeyError(user)
+            raise KeyError("Could not validate provided token", user)
 
     def _get_auth(self, username, password, token_path, grant_type, client_id):
         token = requests.get(
@@ -70,7 +70,7 @@ class BWUser:
         if "access_token" in token:
             return username, token["access_token"]
         else:
-            raise KeyError(token)
+            raise KeyError("Authentication failed", token)
 
     def _read_auth(self, username, token_path):
         user_tokens = self._read_auth_file(token_path)
@@ -90,8 +90,12 @@ class BWUser:
         if os.path.isfile(token_path):
             with open(token_path) as token_file:
                 for line in token_file:
-                    user, token = line.split()
-                    user_tokens[user] = token
+                    try:
+                        user, token = line.split()
+                    except ValueError:
+                        pass
+
+                    user_tokens[user] = token       
         return user_tokens
 
     def get_projects(self):
