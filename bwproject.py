@@ -19,7 +19,7 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
+    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client"):
         """
         Creates a BWUser object.
 
@@ -27,73 +27,76 @@ class BWUser:
             username:   Brandwatch username.
             password:   Brandwatch password - Optional if you already have an access token.
             token:      Access token - Optional.
-            token_path: File path to the file where access tokens will be read from and written to - Optional.  Defaults to tokens.txt.
+            token_path:  File path to the file where access tokens will be read from and written to - Optional.  Defaults to tokens.txt, pass None to disable.
         """
         self.apiurl = "https://newapi.brandwatch.com/"
         self.oauthpath = "oauth/token"
         self.console_report = console_report
 
         if token:
-            self._token_auth(token)
-
-            if token_path:
-                self._write_token(token_path)
-        elif username and password:
-            self._password_auth(username, password, token_path)
-
-            if token_path:
-                self._write_token(token_path)
-        elif username:
-            self._file_auth(username, token_path)
+            self.username, self.token = self._test_auth(username, token)
+            if token_path is not None:
+                self._write_auth(token_path)
+        elif username is not None and password is not None:
+            self.username, self.token = self._get_auth(username, password, token_path, grant_type, client_id)
+            if token_path is not None:
+                self._write_auth(token_path)
+        elif username is not None:
+            self.username, self.token = self._read_auth(username, token_path)
         else:
             raise KeyError("Must provide valid token, username and password, or username and path to token file")
 
-    def _token_auth(self, token):
+    def _test_auth(self, username, token):
         user = requests.get(self.apiurl + "me", params={"access_token": token}).json()
+        if "username" in user:
+            if username is None:
+                return user["username"], token
+            elif user["username"] == username:
+                return username, token
+            else:
+                raise KeyError("Username " + username + " does not match provided token", user)
+        else:
+            raise KeyError("Could not validate provided token", user)
 
-        try:
-            self.username = user["username"]
-            self.token = token
-        except KeyError:
-            raise KeyError(user)
-
-    def _password_auth(self, username, password, token_path):
+    def _get_auth(self, username, password, token_path, grant_type, client_id):
         token = requests.get(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
                 "password": password,
-                "grant_type": "api-password",
-                "client_id": "brandwatch-api-client"
+                "grant_type": grant_type,
+                "client_id": client_id
             }).json()
-
-        try:
-            self.username = username
-            self.token = token["access_token"]
-        except KeyError:
-            raise KeyError(token)
-
-    def _file_auth(self, username, token_path):
-        with open(token_path) as token_file:
-            for line in token_file:
-                words = line.split()
-
-                if len(words) == 2 and words[0] == username:
-                    self.username = username
-                    self.token = words[1]
-                    return
-
-        raise KeyError("Token not found in file: " + token_path)
-
-    def _write_token(self, token_path):
-        if os.path.isfile(token_path):
-            with open(token_path, "r") as token_file:
-                current = token_file.read()
+        if "access_token" in token:
+            return username, token["access_token"]
         else:
-            current = ''
+            raise KeyError("Authentication failed", token)
 
+    def _read_auth(self, username, token_path):
+        user_tokens = self._read_auth_file(token_path)
+        if username in user_tokens:
+            return self._test_auth(username, user_tokens[username])
+        else:
+            raise KeyError("Token not found in file: " + token_path)
+
+    def _write_auth(self, token_path):
+        user_tokens = self._read_auth_file(token_path)
+        user_tokens[self.username] = self.token
         with open(token_path, "w") as token_file:
-            token_file.write(self.username + " " + self.token + "\n" + current)
+            token_file.write("\n".join(["\t".join(item) for item in user_tokens.items()]))
+
+    def _read_auth_file(self, token_path):
+        user_tokens = {}
+        if os.path.isfile(token_path):
+            with open(token_path) as token_file:
+                for line in token_file:
+                    try:
+                        user, token = line.split()
+                    except ValueError:
+                        pass
+
+                    user_tokens[user] = token       
+        return user_tokens
 
     def get_projects(self):
         """
@@ -212,7 +215,7 @@ class BWProject(BWUser):
         project_address:    Path to append to the Brandwatch API url to make any project level calls.
         console_report:     Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
     """
-    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, console_report=True):
+    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client"):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
 
@@ -225,7 +228,7 @@ class BWProject(BWUser):
             console_report: Boolean flag to control console reporting.  It defaults to True, so set to False if you do not want console reporting.  
         """
         super().__init__(token=token, token_path=token_path, username=username, password=password,
-                         console_report=console_report)
+                         console_report=console_report, grant_type=grant_type, client_id=client_id)
         self.project_name = ""
         self.project_id = -1
         self.project_address = ""
