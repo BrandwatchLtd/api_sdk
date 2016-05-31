@@ -443,7 +443,7 @@ class BWQueries(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(authorlists.get_id(s))
+                ids.append(authorlists.get(s)["id"])
             return ids
 
         elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
@@ -452,7 +452,7 @@ class BWQueries(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(locationlists.get_id(s))
+                ids.append(locationlists.get(s)["id"])
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
@@ -461,7 +461,7 @@ class BWQueries(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(sitelists.get_id(s))
+                ids.append(sitelists.get(s)["id"])
             return ids
 
         else:
@@ -604,7 +604,7 @@ class BWGroups(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(authorlists.get_id(s))
+                ids.append(authorlists.get(s)["id"])
             return ids
 
         elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
@@ -613,7 +613,7 @@ class BWGroups(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(locationlists.get_id(s))
+                ids.append(locationlists.get(s)["id"])
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
@@ -622,7 +622,7 @@ class BWGroups(BWResource, BWMentionsResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(sitelists.get_id(s))
+                ids.append(sitelists.get(s)["id"])
             return ids
 
         else:
@@ -1381,7 +1381,7 @@ class BWRules(BWResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(authorlists.get_id(s))
+                ids.append(authorlists.get(s)["id"])
             return ids
 
         elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
@@ -1390,7 +1390,7 @@ class BWRules(BWResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(locationlists.get_id(s))
+                ids.append(locationlists.get(s)["id"])
             return ids
 
         elif attribute in ["siteGroup", "xsiteGroup"]:
@@ -1399,7 +1399,7 @@ class BWRules(BWResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(sitelists.get_id(s))
+                ids.append(sitelists.get(s)["id"])
             return ids
 
         else:
