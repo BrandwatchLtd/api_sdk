@@ -1279,17 +1279,24 @@ class BWRules(BWResource):
             self.project.delete(endpoint="rules/" + str(self.ids[name]))
         self.reload()
 
-    def get(self):
+    def get(self, name=None):
         """
     	Retrieves all information for a list of existing rules, and formats each rule in the following way {"name":name, "queries":queries, "filter":filters, "ruleAction":ruleAction}
     	Returns:
     		List of dictionaries in the format {"name":name, "queries":queries, "filter":filters, "ruleAction":ruleAction}
     	"""
-        ruledata = self.project.get(endpoint="rules")
-        if "errors" not in ruledata:
-            ruledata = ruledata["results"]
+        if not name:
+            ruledata = self.project.get(endpoint="rules")
+            if "errors" not in ruledata:
+                ruledata = ruledata["results"]
+            else:
+                exit()
+        elif name not in self.ids:
+            raise KeyError("Could not find " + self.resource_type + ": " + name, self.ids)
         else:
-            exit()
+            resource_id = self.ids[name]
+            ruledata = self.project.get(endpoint=self.specific_endpoint + "/" + str(resource_id))
+            ruledata = [ruledata]
 
         rules = []
         for rule in ruledata:
