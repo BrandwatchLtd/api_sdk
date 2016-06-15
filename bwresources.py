@@ -1300,12 +1300,18 @@ class BWRules(BWResource):
 
         rules = []
         for rule in ruledata:
-            name = rule.get("name")
-            queries = rule.get("queryName")
-            if queries is None:  # scope = project, so specific queries are not listed
+            name = rule["name"]
+            queryIds = rule["filter"]["queryId"]
+            if queryIds is None:  # scope = project, so specific queries are not listed
                 queries = "Whole Project"
+            else:
+                queries = []
+                for query in queryIds:
+                    for q in self.queries.ids:
+                        if self.queries.ids[q] == query:
+                            queries.append(q)
 
-            filters = {}
+            filters = {"queryName": queries}
             for fil in rule["filter"]:
                 value = rule["filter"].get(fil)
                 if value is not None and fil != "queryId":
@@ -1315,10 +1321,11 @@ class BWRules(BWResource):
             for action in rule["ruleAction"]:
                 value = rule["ruleAction"].get(action)
                 if value is not None:
-                    ruleAction[action] = self._id_to_name(action, value)
+                    ruleAction["action"] = action
+                    ruleAction["setting"] = self._id_to_name(action, value)
                     break
 
-            rules.append({"name": name, "queries": queries, "filter": filters, "ruleAction": ruleAction})
+            rules.append({"name": name, "filter": filters, "ruleAction": ruleAction})
         return rules
 
     def _fill_data(self, data):
