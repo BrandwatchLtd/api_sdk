@@ -6,7 +6,7 @@ import json
 import datetime
 import filters
 import requests
-
+import threading
 
 class BWResource:
     """
@@ -156,8 +156,7 @@ class BWMentionsResource:
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access mentions.
     """
-
-    def get_mentions(self, max_pages=-1, **kwargs):
+    def get_mentions(self, max_pages=None, **kwargs):
         """
         Retrieves a list of mentions.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
@@ -172,28 +171,24 @@ class BWMentionsResource:
         Returns:
             A list of mentions.
         """
-
         params = self._fill_mentions_params(kwargs)
         all_mentions = []
         counter = 0
+        next_end_date = params["endDate"]
 
-        while max_pages == -1 or counter < max_pages:
+        while max_pages == None or counter < max_pages:
+            params["endDate"] = next_end_date
+            next_mentions = self.get_mentions_page(params, 0)
 
-            params["page"] = counter
-            mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
-
-            if "errors" in mentions:
-                raise KeyError("get mentions failed", mentions)
-
-            if len(mentions["results"]) > 0:
-                all_mentions.extend(mentions["results"])
+            if len(next_mentions) > 0:
+                all_mentions += next_mentions
 
                 if self.console_report:
                     print("Page " + str(counter) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
-
             else:
                 break
 
+            next_end_date = min(mention["date"] for mention in next_mentions)
             counter += 1
 
         if self.console_report:
@@ -215,7 +210,6 @@ class BWMentionsResource:
         return self.project.get(endpoint="data/mentions/count", params=params)
 
     def _fill_mentions_params(self, data):
-
         if "name" not in data:
             raise KeyError("Must specify query or group name", data)
         elif data["name"] not in self.ids:
@@ -238,6 +232,15 @@ class BWMentionsResource:
                 raise KeyError("invalid input for given parameter", param)
 
         return filled
+
+    def _get_mentions_page(self, page = 0, **kwargs):
+        params["page"] = page
+        mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
+
+        if "errors" in mentions:
+            raise KeyError("Mentions GET request failed", mentions)
+        
+        return mentions["results"]
 
     def _valid_input(self, param, setting):
         if (param in filters.params) and (not isinstance(setting, filters.params[param])):
