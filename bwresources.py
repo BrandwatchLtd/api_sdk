@@ -178,7 +178,7 @@ class BWMentionsResource:
 
         while max_pages == None or counter < max_pages:
             params["endDate"] = next_end_date
-            next_mentions = self.get_mentions_page(params, 0)
+            next_mentions = self._get_mentions_page(params)
 
             if len(next_mentions) > 0:
                 all_mentions += next_mentions
@@ -223,6 +223,7 @@ class BWMentionsResource:
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
         filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
+        filled["page"] = data["page"] if "page" in data else 0
 
         for param in data:
             setting = self._name_to_id(param, data[param])
@@ -233,8 +234,7 @@ class BWMentionsResource:
 
         return filled
 
-    def _get_mentions_page(self, page = 0, **kwargs):
-        params["page"] = page
+    def _get_mentions_page(self, params):
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
 
         if "errors" in mentions:
