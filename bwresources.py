@@ -205,6 +205,10 @@ class BWMentionsResource:
         params["pageSize"] = 1
         return self.project.get(endpoint="data/mentions/count", params=params)
 
+    def get_topics(self, **kwargs):
+        params = self._fill_mentions_params(kwargs)
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)
+
     def _fill_mentions_params(self, data):
         if "name" not in data:
             raise KeyError("Must specify query or group name", data)
