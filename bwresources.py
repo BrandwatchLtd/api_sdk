@@ -173,23 +173,19 @@ class BWMentionsResource:
         """
         params = self._fill_mentions_params(kwargs)
         all_mentions = []
-        counter = 0
-        next_end_date = params["endDate"]
 
-        while max_pages == None or counter < max_pages:
-            params["endDate"] = next_end_date
-            next_mentions = self.get_mentions_page(params, 0)
+        while max_pages == None or params["pageSize"] < max_pages:
+            next_mentions = self._get_mentions_page(params, params["pageSize"])
 
             if len(next_mentions) > 0:
                 all_mentions += next_mentions
 
                 if self.console_report:
-                    print("Page " + str(counter) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
+                    print("Page " + str(params["pageSize"]) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
             else:
                 break
 
-            next_end_date = min(mention["date"] for mention in next_mentions)
-            counter += 1
+            params["pageSize"] += 1
 
         if self.console_report:
             print(str(len(all_mentions)) + " mentions downloaded")
@@ -222,7 +218,7 @@ class BWMentionsResource:
         filled["startDate"] = data["startDate"]
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
+        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 1
 
         for param in data:
             setting = self._name_to_id(param, data[param])
@@ -233,8 +229,8 @@ class BWMentionsResource:
 
         return filled
 
-    def _get_mentions_page(self, page = 0, **kwargs):
-        params["page"] = page
+    def _get_mentions_page(self, params, page):
+        params["pageSize"] = page
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
 
         if "errors" in mentions:
