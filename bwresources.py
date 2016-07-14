@@ -206,7 +206,7 @@ class BWMentionsResource:
 
     def get_topics(self, **kwargs):
         params = self._fill_mentions_params(kwargs)
-        return self.project.get(endpoint="data/volume/topics/queries", params=params)
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
     def _fill_mentions_params(self, data):
         if "name" not in data:
