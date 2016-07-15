@@ -174,18 +174,18 @@ class BWMentionsResource:
         params = self._fill_mentions_params(kwargs)
         all_mentions = []
 
-        while max_pages == None or params["pageSize"] < max_pages:
-            next_mentions = self._get_mentions_page(params, params["pageSize"])
+        while max_pages == None or params["page"] < max_pages:
+            next_mentions = self._get_mentions_page(params, params["page"])
 
             if len(next_mentions) > 0:
                 all_mentions += next_mentions
 
                 if self.console_report:
-                    print("Page " + str(params["pageSize"]) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
+                    print("Page " + str(params["page"]) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
             else:
                 break
 
-            params["pageSize"] += 1
+            params["page"] += 1
 
         if self.console_report:
             print(str(len(all_mentions)) + " mentions downloaded")
@@ -202,8 +202,11 @@ class BWMentionsResource:
             A count of the mentions in a given timeframe.
         """
         params = self._fill_mentions_params(kwargs)
-        params["pageSize"] = 1
         return self.project.get(endpoint="data/mentions/count", params=params)
+
+    def get_topics(self, **kwargs):
+        params = self._fill_mentions_params(kwargs)
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
     def _fill_mentions_params(self, data):
         if "name" not in data:
@@ -218,7 +221,8 @@ class BWMentionsResource:
         filled["startDate"] = data["startDate"]
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 1
+        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
+        filled["page"] = data["page"] if "page" in data else 0
 
         for param in data:
             setting = self._name_to_id(param, data[param])
@@ -230,7 +234,7 @@ class BWMentionsResource:
         return filled
 
     def _get_mentions_page(self, params, page):
-        params["pageSize"] = page
+        params["page"] = page
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
 
         if "errors" in mentions:
