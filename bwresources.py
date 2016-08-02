@@ -205,6 +205,19 @@ class BWMentionsResource:
         return self.project.get(endpoint="data/mentions/count", params=params)
 
     def get_chart(self, y_axis, x_axis, breakdown_by, **kwargs):
+        """
+        Retrieves chart data. 
+
+        Args:
+            x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (Y-Axis)" for options.
+            y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (X-Axis)"for options
+            breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
+            kwargs:         You must pass in name (query name), startDate (string), and endDate (string).  All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the specified chart
+
+        """
         params = self._fill_mentions_params(kwargs)
         return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
 
