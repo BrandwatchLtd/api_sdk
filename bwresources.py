@@ -208,7 +208,6 @@ class BWMentionsResource:
         params = self._fill_mentions_params(kwargs)
         return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
 
-
     def get_topics(self, **kwargs):
         params = self._fill_mentions_params(kwargs)
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
