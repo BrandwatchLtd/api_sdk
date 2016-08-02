@@ -204,9 +204,9 @@ class BWMentionsResource:
         params = self._fill_mentions_params(kwargs)
         return self.project.get(endpoint="data/mentions/count", params=params)
 
-    def get_chart(self, dimension1, dimension2, breakdown_by, **kwargs):
+    def get_chart(self, y_axis, x_axis, breakdown_by, **kwargs):
         params = self._fill_mentions_params(kwargs)
-        return self.project.get(endpoint="data/"+dimension1+"/"+dimension2+"/"+breakdown_by, params=params)
+        return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
 
 
     def get_topics(self, **kwargs):
