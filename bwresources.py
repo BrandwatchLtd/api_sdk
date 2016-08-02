@@ -407,6 +407,27 @@ class BWQueries(BWResource, BWMentionsResource):
         backfill_data = {"minDate": backfill_date, "queryId": query_id}
         return self.project.post(endpoint=backfill_endpoint, data=json.dumps(backfill_data))
 
+    def get_mention(self, **kwargs):
+        """
+        Retrieves a single mention by url or resource id.
+        Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
+
+        Args:
+            kwargs:     You must pass in name (query name), and either url or resourceId.
+
+        Raises:
+            KeyError:   If the mentions call fails.
+
+        Returns:
+            A single mention.
+        """
+        params = self._fill_mention_params(kwargs)
+        mention = self.project.get(endpoint="query/"+str(self.ids[kwargs["name"]])+"/mentionfind", params=params)
+
+        if "errors" in mention:
+            raise KeyError("Mentions GET request failed", mention)
+        return mention["mention"]
+
     def _name_to_id(self, attribute, setting):
 
         if isinstance(setting, int):
@@ -494,6 +515,22 @@ class BWQueries(BWResource, BWMentionsResource):
         self.project.validate_query_search(query=filled["includedTerms"], language=filled["languages"])
 
         return json.dumps(filled)
+
+    def _fill_mention_params(self, data):
+        if "name" not in data:
+            raise KeyError("Must specify query or group name", data)
+        elif data["name"] not in self.ids:
+            raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
+        if ("url" not in data) and ("resourceId" not in data):
+            raise KeyError("Must provide either a url or a resourceId", data)
+
+        filled = {}
+        if "url" in data:
+            filled["url"] = data["url"]
+        else:
+            filled["resourceId"] = data["resourceId"]
+
+        return filled
 
 
 class BWGroups(BWResource, BWMentionsResource):
