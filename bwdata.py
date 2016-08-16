@@ -14,8 +14,10 @@ class BWData:
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
 
         Args:
+            name:       You must pass in a query / group name (string).
+            startDate:  You must pass in a start date (string).
             max_pages:  Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
-            kwargs:     You must pass in name (list of query/group names), and startDate (string).  All other filters are optional and can be found in filters.py.
+            kwargs:     All other filters are optional and can be found in filters.py.
 
         Raises:
             KeyError:   If the mentions call fails.
@@ -50,7 +52,9 @@ class BWData:
         Retrieves a count of the mentions in a given timeframe.
 
         Args:
-            kwargs:     You must pass in name (query/group name) and startDate (string).  All other filters are optional and can be found in filters.py.
+            name:       You must pass in a query / group name (string).
+            startDate:  You must pass in a start date (string).
+            kwargs:     All other filters are optional and can be found in filters.py.
 
         Returns:
             A count of the mentions in a given timeframe.
@@ -63,6 +67,8 @@ class BWData:
         Retrieves chart data. 
 
         Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
             x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (Y-Axis)" for options.
             y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (X-Axis)"for options
             breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
@@ -70,6 +76,9 @@ class BWData:
         
         Returns:
             A dictionary representation of the specified chart
+
+        Raises:
+            KeyError:       If you fail to pass in x_axis, y_axis or breakdown_by.
 
         """
         if not (x_axis and y_axis and breakdown_by):
@@ -83,7 +92,9 @@ class BWData:
         Retrieves topics data. 
 
         Args:
-            kwargs: You must pass in name (query name/group) and startDate (string).  All other filters are optional and can be found in filters.py.
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
         
         Returns:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics cloud (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
