@@ -24,6 +24,8 @@ class BWData:
             A list of mentions.
         """
         params = self._fill_params(name, startDate, kwargs)
+        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
+        params["page"] = kwargs["page"] if "page" in kwargs else 0
         all_mentions = []
 
         while max_pages == None or params["page"] < max_pages:
@@ -33,7 +35,7 @@ class BWData:
                 all_mentions += next_mentions
 
                 if self.console_report:
-                    print("Page " + str(params["page"]) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
+                    print("Page " + str(params["page"]) + " of " + self.resource_type + " " + name + " retrieved")
             else:
                 break
 
@@ -102,8 +104,6 @@ class BWData:
         filled["startDate"] = startDate
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
-        filled["page"] = data["page"] if "page" in data else 0
 
         for param in data:
             setting = self._name_to_id(param, data[param])
