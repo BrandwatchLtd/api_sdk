@@ -8,7 +8,7 @@ class BWData:
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access data (e.g. mentions, topics, charts, etc).
     """
-    def get_mentions(self, max_pages=None, **kwargs):
+    def get_mentions(self, name=None, startDate=None, max_pages=None, **kwargs):
         """
         Retrieves a list of mentions.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
@@ -23,7 +23,7 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        params = self._fill_params(kwargs)
+        params = self._fill_params(name, startDate, kwargs)
         all_mentions = []
 
         while max_pages == None or params["page"] < max_pages:
@@ -43,7 +43,7 @@ class BWData:
             print(str(len(all_mentions)) + " mentions downloaded")
         return all_mentions
 
-    def num_mentions(self, **kwargs):
+    def num_mentions(self, name=None, startDate=None, **kwargs):
         """
         Retrieves a count of the mentions in a given timeframe.
 
@@ -53,10 +53,10 @@ class BWData:
         Returns:
             A count of the mentions in a given timeframe.
         """
-        params = self._fill_params(kwargs)
+        params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions/count", params=params)
 
-    def get_chart(self, y_axis, x_axis, breakdown_by, **kwargs):
+    def get_chart(self, name=None, startDate=None, y_axis=None, x_axis=None, breakdown_by=None, **kwargs):
         """
         Retrieves chart data. 
 
@@ -70,10 +70,13 @@ class BWData:
             A dictionary representation of the specified chart
 
         """
-        params = self._fill_params(kwargs)
+        if not (x_axis and y_axis and breakdown_by):
+            raise KeyError("You must pass in an x_axis, y_axis and breakdown_by")
+
+        params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
 
-    def get_topics(self, **kwargs):
+    def get_topics(self, name=None, startDate=None, **kwargs):
         """
         Retrieves topics data. 
 
@@ -83,20 +86,20 @@ class BWData:
         Returns:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics cloud (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
         """
-        params = self._fill_params(kwargs)
+        params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
-    def _fill_params(self, data):
-        if "name" not in data:
+    def _fill_params(self, name, startDate, data):
+        if not name:
             raise KeyError("Must specify query or group name", data)
-        elif data["name"] not in self.ids:
-            raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
-        if "startDate" not in data:
+        elif name not in self.ids:
+            raise KeyError("Could not find " + self.resource_type + " " + name, self.ids)
+        if not startDate:
             raise KeyError("Must provide start date", data)
 
         filled = {}
-        filled[self.resource_id_name] = self.ids[data["name"]]
-        filled["startDate"] = data["startDate"]
+        filled[self.resource_id_name] = self.ids[name]
+        filled["startDate"] = startDate
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
         filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
