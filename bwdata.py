@@ -102,6 +102,348 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
+    def get_topics_comparison(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves topics comparison data. 
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the topics including everything that can be seen in the chart view of the topics comparison (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/topics/compare/gender", params=params)["topics"]
+
+    def get_authors(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves author data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the authors including everything that can be seen in the list of authors
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/topauthors/queries", params=params)["results"]
+        
+    def get_history(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves history data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the history component, all the points of time that the timeline covers
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/queries/days", params=params)["results"]
+    
+    def get_topsites(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves top sites data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of top sites
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
+        
+    def get_tweeters(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves tweeters data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of top tweeters
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
+        
+    def get_volume(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves volume data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of volume data
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
+
+    def get_world(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves world overview (mentions map) data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of mapped mentions on a globe data
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/queries/countries", params=params)["results"]["values"]
+
+    def get_keyinsights(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves key insights component data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the component key insights
+        """
+        key_insights = {"total_mentions":self.get_keyinsights_mention_count(name, startDate),
+        "unique_authors":self.get_keyinsights_author_count(name, startDate),
+        "topic_trends":self.get_keyinsights_topics(name, startDate),
+        "rising_news":self.get_keyinsights_news(name, startDate)}
+        return key_insights
+
+
+    def get_keyinsights_mention_count(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves total mentions count data from key insights component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            An integer that represents the total number of mentions
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/mentions/count", params=params)["mentionsCount"]
+
+    def get_keyinsights_author_count(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves total unique authors count data from key insights component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            An integer that represents the total number of unique authors
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/authors/months/queries", params=params)["results"][0]["values"][0]["value"] 
+
+    def get_keyinsights_topics(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the top 3 trending topics data from key insights component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the top 3 trending topics
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        params["limit"] = kwargs["limit"] if "limit" in kwargs else 3
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
+
+    def get_keyinsights_news(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the top 3 rising news data from the key insights component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the rising top 3 rising news urls
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 3
+        return self.project.get(endpoint="data/mentions", params=params)["results"]
+
+    def get_summary(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the summary component data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the summary component analysis
+        """
+        summary = {"sentiment":self.get_summary_sentiment(name, startDate),
+        "topsites":self.get_summary_topsites(name, startDate),
+        "pagetypes":self.get_summary_pagetypes(name, startDate)}
+        return summary
+
+    def get_summary_sentiment(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the sentiment data from the summary component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the summary sentiment analysis 
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/sentiment/days", params=params)["results"]
+
+    def get_summary_topsites(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the top sites data from the summary component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the summary sites analysis 
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
+
+    def get_summary_pagetypes(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the top page type data from the summary component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the summary page type analysis 
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
+
+    def get_twitter_insights_feature(self, name=None, startDate=None, feature=None, **kwargs):
+        """
+        Retrieves the a feature from the twitter insights component.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            feature:        Pass in a feature of the twitter insights component (written in lowercase within a string). This is either hashtags, emoticons, urls, or mentionedauthors.
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns:
+            A dictionary representation of the feature of the twitter insights analysis component
+        """
+        if not (feature):
+            raise KeyError("You must pass in a feature")
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/"+feature, params=params)
+
+    def get_twitter_insights(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the twitter insights component data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the twitter insights component data    
+        """
+        twitter_insights = {"hashtags":self.get_twitter_insights_feature(name,startDate,"hashtags"),
+        "emoticons":self.get_twitter_insights_feature(name,startDate,"emoticons"),
+        "urls":self.get_twitter_insights_feature(name,startDate,"urls"),
+        "mentionedauthors":self.get_twitter_insights_feature(name,startDate,"mentionedauthors")}
+        return twitter_insights
+
+    def get_volume_group(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the volume for group data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+            
+        Returns:
+            A dictionary representation of the volume for group data
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/queries/sentiment", params=params)["results"]
+
+    def get_date_range_comparison(self, name=None, startDate=None, date_ranges=None, **kwargs):
+        """
+        Retrieves the date range data
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            date_ranges:    You must pass in date range(s) ([list] of strings).
+            kwargs:         All other filters are optional and can be found in filters.py.
+        
+        Returns: 
+            A dictionary representation of the date range data applied on the query
+
+        Raises:
+            KeyError:       If you fail to pass in a date range
+        """
+        query_id = self.ids[name]
+        date_range_list = self._get_date_ranges(query_id)
+        date_range_ids = [dr["id"] for dr in date_range_list if dr["name"] in date_ranges]
+        
+        if (date_range_ids == [] or date_ranges == None) :
+            raise KeyError("You must pass in a valid list of date range(s)")
+
+        params = self._fill_params(name, startDate, kwargs)
+        params["dateRanges"] = date_range_ids
+        return self.project.get(endpoint="data/volume/dateRanges/days", params = params)["results"]
+
+    def _get_date_ranges(self, query_id=None):
+        """
+        Helper method: Gets the date range for a query
+
+        Args: 
+            query_id:       You must pass in a query / group id (integer).
+            date_ranges:    You must pass in date range(s) ([list] of strings).
+
+        Returns:
+            A dictionary representation of the date ranges available for the specified query 
+        
+        """ 
+        return self.project.get(endpoint="queries/"+str(query_id)+"/"+"date-range")
+        
+
     def _fill_params(self, name, startDate, data):
         if not name:
             raise KeyError("Must specify query or group name", data)
@@ -115,6 +457,11 @@ class BWData:
         filled["startDate"] = startDate
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+
+        if "orderBy" in data:
+            filled["orderBy"] = data["orderBy"]
+        if "orderDirection" in data:
+            filled["orderDirection"] = data["orderDirection"]
 
         for param in data:
             setting = self._name_to_id(param, data[param])
