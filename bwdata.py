@@ -72,7 +72,7 @@ class BWData:
             y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (Y-Axis)" for options
             x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (X-Axis)" for options.
             breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
-            kwargs:         You must pass in name (query name/group) and startDate (string).  All other filters are optional and can be found in filters.py.
+            kwargs:         You must pass in name (query name/group) and startDate (string).  Additionally, if you x_axis or breakdown_by consists of categories or tags you must pass in dim1Args or dim2Args, respectively, which should be a list of the names of those cats/tags. All other filters are optional and can be found in filters.py.
         
         Returns:
             A dictionary representation of the specified chart
