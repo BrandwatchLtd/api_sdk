@@ -69,8 +69,8 @@ class BWData:
         Args:
             name:           You must pass in a query / group name (string).
             startDate:      You must pass in a start date (string).
-            x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (Y-Axis)" for options.
-            y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (X-Axis)"for options
+            y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (Y-Axis)" for options
+            x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (X-Axis)" for options.
             breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
             kwargs:         You must pass in name (query name/group) and startDate (string).  All other filters are optional and can be found in filters.py.
         
@@ -81,10 +81,15 @@ class BWData:
             KeyError:       If you fail to pass in x_axis, y_axis or breakdown_by.
 
         """
-        if not (x_axis and y_axis and breakdown_by):
-            raise KeyError("You must pass in an x_axis, y_axis and breakdown_by")
+        if not (y_axis and x_axis and breakdown_by):
+            raise KeyError("You must pass in an y_axis, x_axis and breakdown_by")
 
         params = self._fill_params(name, startDate, kwargs)
+        if "dim1Args" in params:
+            params["dim1Args"] = self._name_to_id(x_axis, params["dim1Args"])
+        if "dim2Args" in params:
+            params["dim2Args"] = self._name_to_id(breakdown_by, params["dim2Args"])
+
         return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
 
     def get_topics(self, name=None, startDate=None, **kwargs):
