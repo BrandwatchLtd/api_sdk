@@ -347,7 +347,8 @@ class BWQueries(BWResource, bwdata.BWData):
                 ids.append(self.categories.ids[parent]["children"][child])
             return ids
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -355,7 +356,8 @@ class BWQueries(BWResource, bwdata.BWData):
                 ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -524,7 +526,8 @@ class BWGroups(BWResource, bwdata.BWData):
                 ids.append(self.categories.ids[parent]["children"][child])
             return ids
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -532,7 +535,8 @@ class BWGroups(BWResource, bwdata.BWData):
                 ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -1315,20 +1319,22 @@ class BWRules(BWResource):
                 child = setting[category][0]
             return self.categories.ids[parent]["children"][child]
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
-            for category in setting:
-                ids.append(self.categories.ids[category]["id"])
+            for s in setting:
+                ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
-            for tag in setting:
-                ids.append(self.tags.ids[tag])
+            for s in setting:
+                ids.append(self.tags.ids[s])
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
