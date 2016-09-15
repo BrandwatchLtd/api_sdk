@@ -523,6 +523,27 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions/facebookposts", params = params)["results"]
 
+    def get_instagram_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+        """
+        Retrieves the specified part of the instagram interactions component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+            metadata_type:  You must pass in the type of instagram channel data you want (string). This can be either ownerActivity or audienceActivity.
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the specified part of the instagram interactions component data.   
+        """
+        if not (metadata_type):
+            raise KeyError("You must pass in a metadata_type")
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
+
+
     def _get_date_ranges(self, query_id=None):
         """
         Helper method: Gets the date range for a query
