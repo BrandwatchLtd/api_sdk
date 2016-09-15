@@ -507,6 +507,22 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions/facebookcomments", params = params)["results"]
 
+    def get_fb_posts(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the facebook posts component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A list of facebook authors, each having a dictionary representation of their respective facebook data    
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/mentions/facebookposts", params = params)["results"]
+
     def _get_date_ranges(self, query_id=None):
         """
         Helper method: Gets the date range for a query
