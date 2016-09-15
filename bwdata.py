@@ -435,20 +435,25 @@ class BWData:
         return self.project.get(endpoint="data/volume/dateRanges/days", params = params)["results"]
 
         ## Channels
-    def get_fb_analytics_audience(self, name=None, startDate=None, **kwargs):
+    def get_fb_analytics_partial(self, name=None, metadata_type=None, startDate=None, **kwargs):
         """
-        Retrieves the facebook analytics audience component data.
+        Retrieves the specified facebook analytics audience component data.
 
         Args:
-            name:           You must pass in a query / group name (string).
+            name:           You must pass in a channel / group name (string).
             startDate:      You must pass in a start date (string).
+            metadata_type:  You must pass in the type of fb channel data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
+
             kwargs:         All other filters are optional and can be found in filters.py.
                
         Returns: 
-            A dictionary representation of the facebook analytics audience component data    
+            A dictionary representation of the specified facebook analytics audience component data    
         """
+        if not (metadata_type):
+            raise KeyError("You must pass in a metadata_type")
+
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/audience/queries/days", params = params)["results"]
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
 
     def _get_date_ranges(self, query_id=None):
         """
