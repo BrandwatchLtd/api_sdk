@@ -438,7 +438,7 @@ class BWData:
 
     def get_fb_analytics(self, name=None, startDate=None, **kwargs):
         """
-        Retrieves the entire facebook analytics audience component data.
+        Retrieves the entire facebook analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
@@ -447,7 +447,7 @@ class BWData:
             kwargs:         All other filters are optional and can be found in filters.py.
                
         Returns: 
-            A dictionary representation of the entire facebook analytics audience component data    
+            A dictionary representation of the entire facebook analytics component data    
         """
         fb_analytics = {"audience":self.get_fb_analytics_partial(name,startDate,"audience"),
         "ownerActivity":self.get_fb_analytics_partial(name,startDate,"ownerActivity"),
@@ -457,7 +457,7 @@ class BWData:
         
     def get_fb_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
         """
-        Retrieves the specified part of the facebook analytics audience component data.
+        Retrieves the specified part of the facebook analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
@@ -467,13 +467,29 @@ class BWData:
             kwargs:         All other filters are optional and can be found in filters.py.
                
         Returns: 
-            A dictionary representation of the specified part of the facebook analytics audience component data    
+            A dictionary representation of the specified part of the facebook analytics component data    
         """
         if not (metadata_type):
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
+
+    def get_fb_audience(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the facebook audience component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A list of facebook authors, each having a dictionary representation of their respective facebook data    
+        """
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params = params)["results"]
 
     def _get_date_ranges(self, query_id=None):
         """
