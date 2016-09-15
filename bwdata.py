@@ -523,7 +523,24 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions/facebookposts", params = params)["results"]
 
-    def get_instagram_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_ig_interactions(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the entire instagram interactions component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the entire instagram interactions component data.   
+        """
+        instagram_interactions ={"ownerActivity":self.get_ig_interactions_partial(name,startDate,"ownerActivity"),
+        "audienceActivity":self.get_ig_interactions_partial(name,startDate,"audienceActivity")}
+        return instagram_interactions
+
+    def get_ig_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the instagram interactions component data.
 
