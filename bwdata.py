@@ -435,9 +435,29 @@ class BWData:
         return self.project.get(endpoint="data/volume/dateRanges/days", params = params)["results"]
 
         ## Channels
-    def get_fb_analytics_partial(self, name=None, metadata_type=None, startDate=None, **kwargs):
+
+    def get_fb_analytics(self, name=None, startDate=None, **kwargs):
         """
-        Retrieves the specified facebook analytics audience component data.
+        Retrieves the entire facebook analytics audience component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the entire facebook analytics audience component data    
+        """
+        fb_analytics = {"audience":self.get_fb_analytics_partial(name,startDate,"audience"),
+        "ownerActivity":self.get_fb_analytics_partial(name,startDate,"ownerActivity"),
+        "audienceActivity":self.get_fb_analytics_partial(name,startDate,"audienceActivity"),
+        "impressions":self.get_fb_analytics_partial(name,startDate,"impressions")}
+        return fb_analytics
+        
+    def get_fb_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+        """
+        Retrieves the specified part of the facebook analytics audience component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
@@ -447,7 +467,7 @@ class BWData:
             kwargs:         All other filters are optional and can be found in filters.py.
                
         Returns: 
-            A dictionary representation of the specified facebook analytics audience component data    
+            A dictionary representation of the specified part of the facebook analytics audience component data    
         """
         if not (metadata_type):
             raise KeyError("You must pass in a metadata_type")
