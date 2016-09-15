@@ -245,8 +245,8 @@ class BWProject(BWUser):
         project_found = False
 
         for p in projects:
-            if p["name"] == project:
-                self.project_name = project
+            if (p["name"] == project) or p["id"] == int(project):
+                self.project_name = p["name"]
                 self.project_id = p["id"]
                 self.project_address = "projects/" + str(self.project_id) + "/"
                 project_found = True
