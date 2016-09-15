@@ -355,6 +355,24 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
 
+    def get_twitter_insights(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the twitter insights component data.
+
+        Args:
+            name:           You must pass in a query / group name (string).
+            startDate:      You must pass in a start date (string).
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the twitter insights component data    
+        """
+        twitter_insights = {"hashtags":self.get_twitter_insights_feature(name,startDate,"hashtags"),
+        "emoticons":self.get_twitter_insights_feature(name,startDate,"emoticons"),
+        "urls":self.get_twitter_insights_feature(name,startDate,"urls"),
+        "mentionedauthors":self.get_twitter_insights_feature(name,startDate,"mentionedauthors")}
+        return twitter_insights
+
     def get_twitter_insights_feature(self, name=None, startDate=None, feature=None, **kwargs):
         """
         Retrieves the a feature from the twitter insights component.
@@ -373,24 +391,6 @@ class BWData:
 
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/"+feature, params=params)
-
-    def get_twitter_insights(self, name=None, startDate=None, **kwargs):
-        """
-        Retrieves the twitter insights component data.
-
-        Args:
-            name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
-            kwargs:         All other filters are optional and can be found in filters.py.
-               
-        Returns: 
-            A dictionary representation of the twitter insights component data    
-        """
-        twitter_insights = {"hashtags":self.get_twitter_insights_feature(name,startDate,"hashtags"),
-        "emoticons":self.get_twitter_insights_feature(name,startDate,"emoticons"),
-        "urls":self.get_twitter_insights_feature(name,startDate,"urls"),
-        "mentionedauthors":self.get_twitter_insights_feature(name,startDate,"mentionedauthors")}
-        return twitter_insights
 
     def get_volume_group(self, name=None, startDate=None, **kwargs):
         """
