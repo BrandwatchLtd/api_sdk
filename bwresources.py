@@ -226,15 +226,30 @@ class BWMentionsResource:
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
     def _fill_mentions_params(self, data):
+        try:
+            int(data["name"])
+            numerical = True
+        except ValueError:
+            numerical = False
+
         if "name" not in data:
             raise KeyError("Must specify query or group name", data)
-        elif data["name"] not in self.ids:
-            raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
+        elif numerical:
+            if int(data["name"]) not in self.ids.values():
+                raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
+        elif not numerical:
+            if data["name"] not in self.ids:
+                raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
         if "startDate" not in data:
             raise KeyError("Must provide start date", data)
 
         filled = {}
-        filled[self.resource_id_name] = self.ids[data["name"]]
+
+        if numerical:
+            filled[self.resource_id_name] = data["name"]
+        else:
+            filled[self.resource_id_name] = self.ids[data["name"]]
+
         filled["startDate"] = data["startDate"]
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
