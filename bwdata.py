@@ -462,7 +462,7 @@ class BWData:
         Args:
             name:           You must pass in a channel / group name (string).
             startDate:      You must pass in a start date (string).
-            metadata_type:  You must pass in the type of fb channel data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
+            metadata_type:  You must pass in the type of fb analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
 
             kwargs:         All other filters are optional and can be found in filters.py.
                
@@ -547,7 +547,7 @@ class BWData:
         Args:
             name:           You must pass in a channel / group name (string).
             startDate:      You must pass in a start date (string).
-            metadata_type:  You must pass in the type of instagram channel data you want (string). This can be either ownerActivity or audienceActivity.
+            metadata_type:  You must pass in the type of instagram interactions data you want (string). This can be either ownerActivity or audienceActivity.
 
             kwargs:         All other filters are optional and can be found in filters.py.
                
@@ -560,6 +560,25 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
 
+    def get_ig_insights_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+        """
+        Retrieves the specified part of the instagram owner insights component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+            metadata_type:  You must pass in the type of instagram insights data you want (string). This can be either hashtags, mentionedauthors, or emoticons.
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A list of authors, hashtags, or emoticons, each having a dictionary representation of their respective instagram insights data    
+        """
+        if not (metadata_type):
+            raise KeyError("You must pass in a metadata_type")
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/"+metadata_type, params = params)["results"]
 
     def _get_date_ranges(self, query_id=None):
         """
