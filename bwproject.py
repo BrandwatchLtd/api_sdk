@@ -244,8 +244,21 @@ class BWProject(BWUser):
         projects = self.get_projects()
         project_found = False
 
+        try:
+            int(project)
+            numerical = True
+        except:
+            numerical = False
+
         for p in projects:
-            if (p["name"] == project) or p["id"] == int(project):
+            found = False
+            if numerical:
+                if p["id"] == int(project):
+                    found = True
+            else:
+                if p["name"] == project:
+                    found = True
+            if found:
                 self.project_name = p["name"]
                 self.project_id = p["id"]
                 self.project_address = "projects/" + str(self.project_id) + "/"
