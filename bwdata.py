@@ -649,6 +649,25 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions/tweets", params = params)["results"]
         
+    def get_tw_analytics(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the entire twitter analytics component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the entire twitter analytics component data    
+        """
+        tw_analytics = {"audience":self.get_tw_analytics_partial(name,startDate,"audience"),
+        "ownerActivity":self.get_tw_analytics_partial(name,startDate,"ownerActivity"),
+        "audienceActivity":self.get_tw_analytics_partial(name,startDate,"audienceActivity"),
+        "impressions":self.get_tw_analytics_partial(name,startDate,"impressions")}
+        return tw_analytics
+        
     def get_tw_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the twitter analytics component data.
