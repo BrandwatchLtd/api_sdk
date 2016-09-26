@@ -614,6 +614,23 @@ class BWData:
 
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/mentions", params = params)["results"]
+
+    def get_ig_followers(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the instagram total followers component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A list with the follower count for each day in the date range, each day having a dictionary representation of their respective instagram follower count data 
+        """
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/audience/queries/days", params = params)["results"][0]['values']
     
     def _get_date_ranges(self, query_id=None):
         """
