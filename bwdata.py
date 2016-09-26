@@ -462,7 +462,7 @@ class BWData:
         Args:
             name:           You must pass in a channel / group name (string).
             startDate:      You must pass in a start date (string).
-            metadata_type:  You must pass in the type of fb analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
+            metadata_type:  You must pass in the type of facebook analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
 
             kwargs:         All other filters are optional and can be found in filters.py.
                
@@ -473,7 +473,7 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]["values"]
 
     def get_fb_audience(self, name=None, startDate=None, **kwargs):
         """
@@ -630,8 +630,45 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/audience/queries/days", params = params)["results"][0]['values']
+        return self.project.get(endpoint="data/audience/queries/days", params = params)["results"][0]["values"]
     
+    def get_tweets(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the twitter tweets component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A list of tweets with author, location, and other metadata, each tweet having a dictionary representation of their respective tweet data 
+        """
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/mentions/tweets", params = params)["results"]
+        
+    def get_tw_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+        """
+        Retrieves the specified part of the twitter analytics component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+            metadata_type:  You must pass in the type of twitter analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the specified part of the twitter analytics component data    
+        """
+        if not (metadata_type):
+            raise KeyError("You must pass in a metadata_type")
+
+        params = self._fill_params(name, startDate, kwargs)
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]["values"]
+
     def _get_date_ranges(self, query_id=None):
         """
         Helper method: Gets the date range for a query
