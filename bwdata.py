@@ -704,6 +704,25 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         return self.project.get(endpoint="data/volume/toptweeters/queries", params = params)["results"]
 
+    def get_dem_summary(self, name=None, startDate=None, **kwargs):
+        """
+        Retrieves the entire demographics summary component data.
+
+        Args:
+            name:           You must pass in a channel / group name (string).
+            startDate:      You must pass in a start date (string).
+
+            kwargs:         All other filters are optional and can be found in filters.py.
+               
+        Returns: 
+            A dictionary representation of the entire demographics summary component data    
+        """
+        dem_summary = {"gender":self.get_dem_summary_partial(name,startDate,"gender"),
+        "interest":self.get_dem_summary_partial(name,startDate,"interest"),
+        "profession":self.get_dem_summary_partial(name,startDate,"profession"),
+        "countries":self.get_dem_summary_partial(name,startDate,"countries")}
+        return dem_summary
+
     def get_dem_summary_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
         """
         Retrieves a specified part of the demographic summary component data extracted from twitter data.
