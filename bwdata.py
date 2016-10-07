@@ -60,7 +60,7 @@ class BWData:
             A count of the mentions in a given timeframe.
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/count", params=params)
+        return self.project.get(endpoint="data/mentions/count", params=params)['mentionsCount']
 
     def get_chart(self, name=None, startDate=None, y_axis=None, x_axis=None, breakdown_by=None, **kwargs):
         """
