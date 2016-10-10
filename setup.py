@@ -29,7 +29,7 @@ setup(
         'Programming Language :: Python :: 3.5'
     ],
 
-    py_modules=['bwproject', 'bwresources', 'filters'],
+    py_modules=['bwproject', 'bwresources', 'bwdata', 'filters'],
 
     install_requires=['requests']
 
