@@ -349,6 +349,7 @@ class BWQueries(BWResource, bwdata.BWData):
 
         elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
             #plural included for get_charts syntax
+            #note: parentCategories and categories params will be ignored for everything but chart calls
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -528,6 +529,7 @@ class BWGroups(BWResource, bwdata.BWData):
 
         elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
             #plural included for get_charts syntax
+            #note: parentCategories and categories params will be ignored for everything but chart calls
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
