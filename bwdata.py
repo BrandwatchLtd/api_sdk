@@ -1,5 +1,5 @@
 """
-bwrdata contains the BWData class.
+bwdata contains the BWData class.
 """
 import datetime
 import filters
@@ -760,15 +760,29 @@ class BWData:
         return self.project.get(endpoint="queries/"+str(query_id)+"/"+"date-range")   
 
     def _fill_params(self, name, startDate, data):
+        try:
+            int(name)
+            numerical = True
+        except ValueError:
+            numerical = False
+
         if not name:
             raise KeyError("Must specify query or group name", data)
-        elif name not in self.ids:
-            raise KeyError("Could not find " + self.resource_type + " " + name, self.ids)
+        elif numerical:
+            if int(name) not in self.ids.values():
+                raise KeyError("Could not find " + self.resource_type + " " + name, self.ids)
+        elif not numerical:
+            if name not in self.ids:
+                raise KeyError("Could not find " + self.resource_type + " " + name, self.ids)
         if not startDate:
             raise KeyError("Must provide start date", data)
 
         filled = {}
-        filled[self.resource_id_name] = self.ids[name]
+        if numerical:
+            filled[self.resource_id_name] = name
+        else:
+            filled[self.resource_id_name] = name
+
         filled["startDate"] = startDate
         filled["endDate"] = data["endDate"] if "endDate" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
