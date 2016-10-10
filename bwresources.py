@@ -7,6 +7,7 @@ import datetime
 import filters
 import requests
 import threading
+import bwdata
 
 class BWResource:
     """
@@ -151,139 +152,7 @@ class BWResource:
     def _fill_data():
         raise NotImplementedError
 
-
-class BWMentionsResource:
-    """
-    This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access mentions.
-    """
-    def get_mentions(self, max_pages=None, **kwargs):
-        """
-        Retrieves a list of mentions.
-        Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
-
-        Args:
-            max_pages:  Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
-            kwargs:     You must pass in name (list of query names), startDate (string), and endDate (string).  All other filters are optional and can be found in filters.py.
-
-        Raises:
-            KeyError:   If the mentions call fails.
-
-        Returns:
-            A list of mentions.
-        """
-        params = self._fill_mentions_params(kwargs)
-        all_mentions = []
-
-        while max_pages == None or params["page"] < max_pages:
-            next_mentions = self._get_mentions_page(params, params["page"])
-
-            if len(next_mentions) > 0:
-                all_mentions += next_mentions
-
-                if self.console_report:
-                    print("Page " + str(params["page"]) + " of " + self.resource_type + " " + kwargs["name"] + " retrieved")
-            else:
-                break
-
-            params["page"] += 1
-
-        if self.console_report:
-            print(str(len(all_mentions)) + " mentions downloaded")
-        return all_mentions
-
-    def num_mentions(self, **kwargs):
-        """
-        Retrieves a count of the mentions in a given timeframe.
-
-        Args:
-            kwargs:     You must pass in name (query name), startDate (string), and endDate (string).  All other filters are optional and can be found in filters.py.
-
-        Returns:
-            A count of the mentions in a given timeframe.
-        """
-        params = self._fill_mentions_params(kwargs)
-        return self.project.get(endpoint="data/mentions/count", params=params)
-
-    def get_chart(self, y_axis, x_axis, breakdown_by, **kwargs):
-        """
-        Retrieves chart data. 
-
-        Args:
-            x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (Y-Axis)" for options.
-            y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (X-Axis)"for options
-            breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
-            kwargs:         You must pass in name (query name), startDate (string), and endDate (string).  All other filters are optional and can be found in filters.py.
-        
-        Returns:
-            A dictionary representation of the specified chart
-
-        """
-        params = self._fill_mentions_params(kwargs)
-        return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
-
-    def get_topics(self, **kwargs):
-        params = self._fill_mentions_params(kwargs)
-        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
-
-    def _fill_mentions_params(self, data):
-        try:
-            int(data["name"])
-            numerical = True
-        except ValueError:
-            numerical = False
-
-        if "name" not in data:
-            raise KeyError("Must specify query or group name", data)
-        elif numerical:
-            if int(data["name"]) not in self.ids.values():
-                raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
-        elif not numerical:
-            if data["name"] not in self.ids:
-                raise KeyError("Could not find " + self.resource_type + " " + data["name"], self.ids)
-        if "startDate" not in data:
-            raise KeyError("Must provide start date", data)
-
-        filled = {}
-
-        if numerical:
-            filled[self.resource_id_name] = data["name"]
-        else:
-            filled[self.resource_id_name] = self.ids[data["name"]]
-
-        filled["startDate"] = data["startDate"]
-        filled["endDate"] = data["endDate"] if "endDate" in data else (
-            datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        filled["pageSize"] = data["pageSize"] if "pageSize" in data else 5000
-        filled["page"] = data["page"] if "page" in data else 0
-
-        for param in data:
-            setting = self._name_to_id(param, data[param])
-            if self._valid_input(param, setting):
-                filled[param] = setting
-            else:
-                raise KeyError("invalid input for given parameter", param)
-
-        return filled
-
-    def _get_mentions_page(self, params, page):
-        params["page"] = page
-        mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
-
-        if "errors" in mentions:
-            raise KeyError("Mentions GET request failed", mentions)
-        
-        return mentions["results"]
-
-    def _valid_input(self, param, setting):
-        if (param in filters.params) and (not isinstance(setting, filters.params[param])):
-            return False
-        elif param in filters.special_options and setting not in filters.special_options[param]:
-            return False
-        else:
-            return True
-
-
-class BWQueries(BWResource, BWMentionsResource):
+class BWQueries(BWResource, bwdata.BWData):
     """
     This class provides an interface for query level operations within a prescribed project (e.g. uploading, downloading, renaming, downloading a list of mentions).
 
@@ -442,6 +311,7 @@ class BWQueries(BWResource, BWMentionsResource):
     def get_mention(self, **kwargs):
         """
         Retrieves a single mention by url or resource id.
+        This is ONLY a valid function for queries (not groups), which is why it isn't split out into bwdata.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
 
         Args:
@@ -477,7 +347,9 @@ class BWQueries(BWResource, BWMentionsResource):
                 ids.append(self.categories.ids[parent]["children"][child])
             return ids
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
+            #note: parentCategories and categories params will be ignored for everything but chart calls
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -485,7 +357,8 @@ class BWQueries(BWResource, BWMentionsResource):
                 ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -565,7 +438,7 @@ class BWQueries(BWResource, BWMentionsResource):
         return filled
 
 
-class BWGroups(BWResource, BWMentionsResource):
+class BWGroups(BWResource, bwdata.BWData):
     """
     This class provides an interface for group level operations within a prescribed project.
 
@@ -654,7 +527,9 @@ class BWGroups(BWResource, BWMentionsResource):
                 ids.append(self.categories.ids[parent]["children"][child])
             return ids
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
+            #note: parentCategories and categories params will be ignored for everything but chart calls
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -662,7 +537,8 @@ class BWGroups(BWResource, BWMentionsResource):
                 ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -1445,20 +1321,22 @@ class BWRules(BWResource):
                 child = setting[category][0]
             return self.categories.ids[parent]["children"][child]
 
-        elif attribute in ["parentCategory", "xparentCategory"]:
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
-            for category in setting:
-                ids.append(self.categories.ids[category]["id"])
+            for s in setting:
+                ids.append(self.categories.ids[s]["id"])
             return ids
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
-            for tag in setting:
-                ids.append(self.tags.ids[tag])
+            for s in setting:
+                ids.append(self.tags.ids[s])
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
