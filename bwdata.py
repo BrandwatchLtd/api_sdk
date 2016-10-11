@@ -230,7 +230,6 @@ class BWData:
         "rising_news":self.get_keyinsights_news(name, startDate)}
         return key_insights
 
-
     def get_keyinsights_mention_count(self, name=None, startDate=None, **kwargs):
         """
         Retrieves total mentions count data from key insights component.
@@ -774,6 +773,7 @@ class BWData:
         elif not numerical:
             if name not in self.ids:
                 raise KeyError("Could not find " + self.resource_type + " " + name, self.ids)
+
         if not startDate:
             raise KeyError("Must provide start date", data)
 
@@ -781,7 +781,7 @@ class BWData:
         if numerical:
             filled[self.resource_id_name] = name
         else:
-            filled[self.resource_id_name] = name
+            filled[self.resource_id_name] = self.ids[name]
 
         filled["startDate"] = startDate
         filled["endDate"] = data["endDate"] if "endDate" in data else (
