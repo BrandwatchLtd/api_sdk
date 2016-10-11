@@ -1620,3 +1620,35 @@ class BWAlerts(BWResource):
         else:
             resource_id = self.ids[name]
             return self.project.get(endpoint=self.specific_endpoint + "/" + str(resource_id))
+
+
+    #IN PROGRESS
+    # def _fill_data(self, data):
+    #     filled = {}
+
+    #     if ("name" not in data) or ("queries" not in data) or ("alertTypes" not in data):
+    #         raise KeyError("Need name, queries and alertTypes to create a signal", data)
+
+    #     if not isinstance(alert_type, list):
+    #     	alert_type = [alert_type]
+    #     for alert_type in data["alertTypes"]:
+    #         if alert_type not in ["threshold", "scheduled"]:
+    #             raise KeyError("alertTypes must be either 'threshold' or 'scheduled' (or both)", alert_type)
+
+    #     if data["name"] in self.ids:
+    #         filled["id"] = self.ids[data["name"]]
+    #     if "new_name" in data:
+    #         filled["name"] = data["new_name"]
+    #     else:
+    #         filled["name"] = data["name"]
+
+    #     filled["queryIds"] = []
+    #     for query in data["queries"]:
+    #         filled["queryIds"].append(self.queries.ids[query])
+
+    #     filled["alertTypes"] = data["alertTypes"]
+
+    #     for param in data:
+    #         filled.update(self._name_to_id(param, data[param]))
+
+    #     return json.dumps(filled)
