@@ -1551,3 +1551,72 @@ class BWSignals(BWResource):
                 return {"excludeTagIds": ids}
         else:
             return {}
+
+
+class BWAlerts(BWResource):
+    """
+    This class provides an interface for custom alert operations within a prescribed project (e.g. uploading, downloading).
+
+    Attributes:
+        queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object. 
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+    """
+
+    general_endpoint = "alerts"
+    specific_endpoint = "alerts"
+    resource_type = ""
+
+    def __init__(self, bwproject):
+        """
+        Creates a BWSignals object.
+
+        Args:
+            bwproject:  Brandwatch project.  This is a BWProject object.
+        """
+        super(BWAlerts, self).__init__(bwproject)
+        self.queries = BWQueries(self.project)
+        self.tags = self.queries.tags
+        self.categories = self.queries.categories
+
+    def reload(self):
+        """
+        Refreshes names and ids.
+
+        This function is used internally after editing any resource (e.g. uploading) so that our local copy of the id information matches the system's.
+        The only potential danger is that someone else is editing a resource at the same time you are - in which case your local copy could differ from the system's.  
+        If you fear this has happened, you can call reload() directly.
+
+        Need to override several functions from BWResource because alerts does not return in the same way as other resources (i.e. does not return 'results').
+
+        Raises:
+            KeyError: If there was an error with the request for resource information.
+        """
+        response = self.project.get(endpoint=self.general_endpoint)
+
+        if "errors" in response:
+            raise KeyError("Could not retrieve" + self.resource_type, response)
+
+        self.ids = {resource["name"]: resource["id"] for resource in response}
+
+    def get(self, name=None):
+        """
+        If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.  
+        If you do not specify a name, this function will retrieve all information for all resources of that type as they are stored in Brandwatch.
+
+        Args:
+            name:   Name of the resource that you'd like to retrieve - Optional.  If you do not specify a name, all resources of that type will be retrieved.
+
+        Raises:
+            KeyError:   If you specify a resource name and the resource does not exist.
+
+        Returns:
+            All information for the specified resource, or a list of information on every resource of that type in the account.
+        """
+        if not name:
+            return self.project.get(endpoint=self.general_endpoint)
+        elif name not in self.ids:
+            raise KeyError("Could not find " + self.resource_type + ": " + name, self.ids)
+        else:
+            resource_id = self.ids[name]
+            return self.project.get(endpoint=self.specific_endpoint + "/" + str(resource_id))
