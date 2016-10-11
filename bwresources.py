@@ -152,6 +152,72 @@ class BWResource:
     def _fill_data():
         raise NotImplementedError
 
+    def _name_to_id(self, attribute, setting):
+    	#This will only work for subclasses that have their own copies of the categories and tags
+        if isinstance(setting, int):
+            # already in ID form
+            return setting
+
+        elif attribute in ["category", "xcategory"]:
+            # setting is a dictionary with one key-value pair, so this loop iterates only once
+            # but is necessary to extract the values in the dictionary
+            ids = []
+            for category in setting:
+                parent = category
+                children = setting[category]
+            for child in children:
+                ids.append(self.categories.ids[parent]["children"][child])
+            return ids
+
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            #plural included for get_charts syntax
+            #note: parentCategories and categories params will be ignored for everything but chart calls
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(self.categories.ids[s]["id"])
+            return ids
+
+        elif attribute in ["tag", "xtag", "tags"]:
+            #plural included for get_charts syntax
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(self.tags.ids[s])
+            return ids
+
+        elif attribute in ["authorGroup", "xauthorGroup"]:
+            authorlists = BWAuthorLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(authorlists.get(s)["id"])
+            return ids
+
+        elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
+            locationlists = BWLocationLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(locationlists.get(s)["id"])
+            return ids
+
+        elif attribute in ["siteGroup", "xsiteGroup"]:
+            sitelists = BWSiteLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(sitelists.get(s)["id"])
+            return ids
+
+        else:
+            return setting
+
 class BWQueries(BWResource, bwdata.BWData):
     """
     This class provides an interface for query level operations within a prescribed project (e.g. uploading, downloading, renaming, downloading a list of mentions).
@@ -330,72 +396,6 @@ class BWQueries(BWResource, bwdata.BWData):
             raise KeyError("Mentions GET request failed", mention)
         return mention["mention"]
 
-    def _name_to_id(self, attribute, setting):
-
-        if isinstance(setting, int):
-            # already in ID form
-            return setting
-
-        elif attribute in ["category", "xcategory"]:
-            # setting is a dictionary with one key-value pair, so this loop iterates only once
-            # but is necessary to extract the values in the dictionary
-            ids = []
-            for category in setting:
-                parent = category
-                children = setting[category]
-            for child in children:
-                ids.append(self.categories.ids[parent]["children"][child])
-            return ids
-
-        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
-            #plural included for get_charts syntax
-            #note: parentCategories and categories params will be ignored for everything but chart calls
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.categories.ids[s]["id"])
-            return ids
-
-        elif attribute in ["tag", "xtag", "tags"]:
-            #plural included for get_charts syntax
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.tags.ids[s])
-            return ids
-
-        elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(authorlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
-            locationlists = BWLocationLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(locationlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(sitelists.get(s)["id"])
-            return ids
-
-        else:
-            return setting
-
     def _fill_data(self, data):
         filled = {}
 
@@ -509,72 +509,6 @@ class BWGroups(BWResource, bwdata.BWData):
             A dictionary of the form {query1name: query1id, query2name:query2id, ...}.
         """
         return {q["name"]: q["id"] for q in self.get(name)["queries"]}
-
-    def _name_to_id(self, attribute, setting):
-
-        if isinstance(setting, int):
-            # already in ID form
-            return setting
-
-        elif attribute in ["category", "xcategory"]:
-            # setting is a dictionary with one key-value pair, so this loop iterates only once
-            # but is necessary to extract the values in the dictionary
-            ids = []
-            for category in setting:
-                parent = category
-                children = setting[category]
-            for child in children:
-                ids.append(self.categories.ids[parent]["children"][child])
-            return ids
-
-        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
-            #plural included for get_charts syntax
-            #note: parentCategories and categories params will be ignored for everything but chart calls
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.categories.ids[s]["id"])
-            return ids
-
-        elif attribute in ["tag", "xtag", "tags"]:
-            #plural included for get_charts syntax
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.tags.ids[s])
-            return ids
-
-        elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(authorlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
-            locationlists = BWLocationLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(locationlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(sitelists.get(s)["id"])
-            return ids
-
-        else:
-            return setting
 
     def _fill_data(self, data):
         filled = {}
@@ -1306,68 +1240,6 @@ class BWRules(BWResource):
             filled["scope"] = "project"
 
         return json.dumps(filled)
-
-    def _name_to_id(self, attribute, setting):
-        """ internal use """
-        if isinstance(setting, int):
-            # already in ID form
-            return setting
-
-        elif attribute in ["category", "xcategory"]:
-            # setting is a dictionary with one key-value pair, so this loop iterates only once
-            # but is necessary to extract the values in the dictionary
-            for category in setting:
-                parent = category
-                child = setting[category][0]
-            return self.categories.ids[parent]["children"][child]
-
-        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
-            #plural included for get_charts syntax
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.categories.ids[s]["id"])
-            return ids
-
-        elif attribute in ["tag", "xtag", "tags"]:
-            #plural included for get_charts syntax
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(self.tags.ids[s])
-            return ids
-
-        elif attribute in ["authorGroup", "xauthorGroup"]:
-            authorlists = BWAuthorLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(authorlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
-            locationlists = BWLocationLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(locationlists.get(s)["id"])
-            return ids
-
-        elif attribute in ["siteGroup", "xsiteGroup"]:
-            sitelists = BWSiteLists(self.project)
-            if not isinstance(setting, list):
-                setting = [setting]
-            ids = []
-            for s in setting:
-                ids.append(sitelists.get(s)["id"])
-            return ids
-
-        else:
-            return setting
 
     def _valid_action_input(self, action, setting):
         """ internal use """
