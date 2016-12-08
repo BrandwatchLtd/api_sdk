@@ -81,7 +81,7 @@ class BWUser:
 
     def _write_auth(self, token_path):
         user_tokens = self._read_auth_file(token_path)
-        user_tokens[self.username] = self.token
+        user_tokens[self.username.lower()] = self.token
         with open(token_path, "w") as token_file:
             token_file.write("\n".join(["\t".join(item) for item in user_tokens.items()]))
 
@@ -95,7 +95,7 @@ class BWUser:
                     except ValueError:
                         pass
 
-                    user_tokens[user] = token       
+                    user_tokens[user.lower()] = token
         return user_tokens
 
     def get_projects(self):
