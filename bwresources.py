@@ -123,6 +123,24 @@ class BWResource:
         self.reload()
         return resources
 
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            self.upload(name=name, new_name=new_name, **info)
+
     def delete(self, name):
         """
         Deletes a resource.
@@ -249,6 +267,11 @@ class BWQueries(BWResource, bwdata.BWData):
             if ("name" not in channel) or ("handle" not in channel) or ("channel_type" not in channel):
                 raise KeyError("You must pass a name, a handle and a channel_type to upload a channel")
 
+            if "new_name" in channel:
+                name = channel["new_name"]
+            else:
+                name = channel["name"]
+
             if channel["channel_type"] in ["twitter", "Twitter", "TWITTER"]:
                 userId = self.project.bare_request(verb=requests.get,
                                                    address_root="http://app.brandwatch.net/",
@@ -256,7 +279,7 @@ class BWQueries(BWResource, bwdata.BWData):
                                                    params={"screen_name": channel["handle"]})["id_str"]
 
                 params = {"confirm": "false"}
-                data = json.dumps({"name": channel["name"],
+                data = json.dumps({"name": name,
                                    "twitterScreenName": channel["handle"],
                                    "twitterUserId": userId,
                                    "industry": "general-(recommended)"})
@@ -292,6 +315,27 @@ class BWQueries(BWResource, bwdata.BWData):
 
         self.reload()
         return returnMess
+
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            if info["type"] == "search string":
+                self.upload(name=name, new_name=new_name, **info)
+            else:
+                raise KeyError("We cannot support automated renaming of channels at this time.")
 
     def backfill(self, query_id, backfill_date):
         """
@@ -464,6 +508,24 @@ class BWGroups(BWResource, bwdata.BWData):
         self.queries = BWQueries(self.project)
         self.tags = self.queries.tags
         self.categories = self.queries.categories
+
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            queries = [x["name"] for x in info["queries"]]
+            self.upload(name=name, new_name=new_name, queries=queries)
 
     def upload_queries_as_group(self, group_name, query_data_list, create_only=False, modify_only=False,
                                 backfill_date="", **kwargs):
@@ -812,7 +874,7 @@ class BWLocationLists(BWResource):
         filled = {}
 
         if ("name" not in data) or ("locations" not in data):
-            raise KeyError("Need name and authors to upload locationlist", data)
+            raise KeyError("Need name and locations to upload locationlist", data)
 
         if data["name"] in self.ids:
             filled["id"] = self.ids[data["name"]]
@@ -1134,6 +1196,28 @@ class BWRules(BWResource):
             if "backfill" in data and data["backfill"] == True:
                 self.project.post(endpoint="rules/" + str(rules[data["name"]]) + "/backfill")
 
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            rule={}
+            rule["ruleAction"] = self.rule_action(**info["ruleAction"])
+            if (info["filter"]["queryName"] == "Whole Project"):
+                info["filter"].pop("queryName")
+            rule["filter"] = self.filters(**info["filter"])
+            self.upload(name=name, new_name=new_name, **rule)
+
     def rule_action(self, action, setting):
         """
         Formats rule action into dictionary and checks that its contents are valid.
@@ -1291,10 +1375,14 @@ class BWRules(BWResource):
             filled["projectName"] = data["projectName"] if ("projectName" in data) else self.project.project_name
             filled["queryName"] = data["queryName"] if ("queryName" in data) else None
 
+        if "new_name" in data:
+            filled["name"] = data["new_name"]
+        else:
+            filled["name"] = data["name"]
+
         filled["enabled"] = data["enabled"] if ("enabled" in data) else True
         filled["filter"] = data["filter"] if ("filter" in data) else {}
         filled["ruleAction"] = data["ruleAction"]
-        filled["name"] = data["name"]
         filled["projectId"] = self.project.project_id
 
         # validating the query search - comment this out to skip validation
@@ -1472,6 +1560,25 @@ class BWSignals(BWResource):
         self.tags = self.queries.tags
         self.categories = self.queries.categories
 
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            info["queries"] = info.pop("queryIds")
+            self.upload(name=name, new_name=new_name, **info)
+
     def _fill_data(self, data):
         filled = {}
 
@@ -1494,7 +1601,10 @@ class BWSignals(BWResource):
 
         filled["queryIds"] = []
         for query in data["queries"]:
-            filled["queryIds"].append(self.queries.ids[query])
+            if isinstance(query, int):
+                filled["queryIds"].append(query)
+            else:
+                filled["queryIds"].append(self.queries.ids[query])
 
         filled["subscribers"] = data["subscribers"]
 
@@ -1506,8 +1616,14 @@ class BWSignals(BWResource):
     def _name_to_id(self, attribute, setting):
         """ internal use """
         ids = []
-        if attribute in ["category", "xcategory"]:
+        if attribute in ["includeCategoryIds", "excludeCategoryIds"]:
+            for category in setting:
+                if not isinstance(category, int):
+                    # already in ID form
+                    raise KeyError("Must pass in ids with "+attribute+" parameter, or use names and the appropriate category/xcategory or parentCategory/xparentCategory parameter.")
+            return {attribute: setting}
 
+        elif attribute in ["category", "xcategory"]:
             for category in setting:
                 if isinstance(category, int):
                     # already in ID form
@@ -1538,7 +1654,7 @@ class BWSignals(BWResource):
             else:
                 return {"excludeCategoryIds": ids}
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "includeTagIds", "excludeTagIds"]:
             if not isinstance(setting, list):
                 setting = [setting]
             for tag in setting:
@@ -1548,7 +1664,7 @@ class BWSignals(BWResource):
                 else:
                     ids.append(self.tags.ids[tag])
 
-            if attribute == "tag":
+            if attribute in ["tag", "includeTagIds"]:
                 return {"includeTagIds": ids}
             else:
                 return {"excludeTagIds": ids}
