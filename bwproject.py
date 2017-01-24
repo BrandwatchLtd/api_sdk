@@ -19,7 +19,7 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client", apiurl="newapi.brandwatch.com/"):
+    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, console_report=True, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://newapi.brandwatch.com/"):
         """
         Creates a BWUser object.
 
@@ -29,7 +29,7 @@ class BWUser:
             token:      Access token - Optional.
             token_path:  File path to the file where access tokens will be read from and written to - Optional.  Defaults to tokens.txt, pass None to disable.
         """
-        self.apiurl = "https://%s" % apiurl
+        self.apiurl = apiurl
         self.oauthpath = "oauth/token"
         self.console_report = console_report
 
