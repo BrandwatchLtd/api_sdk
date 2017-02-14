@@ -11,7 +11,7 @@ import bwdata
 
 class BWResource:
     """
-    This class is a superclass for brandwatch resources (queries, groups, mentions, tags, sitelists, authorlists, locationlists and signals). 
+    This class is a superclass for brandwatch resources (queries, groups, mentions, tags, sitelists, authorlists, locationlists and signals).
 
     Attributes:
         project:        Brandwatch project.  This is a BWProject object.
@@ -36,7 +36,7 @@ class BWResource:
         Refreshes names and ids.
 
         This function is used internally after editing any resource (e.g. uploading) so that our local copy of the id information matches the system's.
-        The only potential danger is that someone else is editing a resource at the same time you are - in which case your local copy could differ from the system's.  
+        The only potential danger is that someone else is editing a resource at the same time you are - in which case your local copy could differ from the system's.
         If you fear this has happened, you can call reload() directly.
 
         Raises:
@@ -51,7 +51,7 @@ class BWResource:
 
     def get(self, name=None):
         """
-        If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.  
+        If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.
         If you do not specify a name, this function will retrieve all information for all resources of that type as they are stored in Brandwatch.
 
         Args:
@@ -123,6 +123,24 @@ class BWResource:
         self.reload()
         return resources
 
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            self.upload(name=name, new_name=new_name, **info)
+
     def delete(self, name):
         """
         Deletes a resource.
@@ -157,8 +175,8 @@ class BWQueries(BWResource, bwdata.BWData):
     This class provides an interface for query level operations within a prescribed project (e.g. uploading, downloading, renaming, downloading a list of mentions).
 
     Attributes:
-        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
-        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object.
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.
     """
     general_endpoint = "queries"
     specific_endpoint = "queries"
@@ -249,6 +267,11 @@ class BWQueries(BWResource, bwdata.BWData):
             if ("name" not in channel) or ("handle" not in channel) or ("channel_type" not in channel):
                 raise KeyError("You must pass a name, a handle and a channel_type to upload a channel")
 
+            if "new_name" in channel:
+                name = channel["new_name"]
+            else:
+                name = channel["name"]
+
             if channel["channel_type"] in ["twitter", "Twitter", "TWITTER"]:
                 userId = self.project.bare_request(verb=requests.get,
                                                    address_root="http://app.brandwatch.net/",
@@ -256,7 +279,7 @@ class BWQueries(BWResource, bwdata.BWData):
                                                    params={"screen_name": channel["handle"]})["id_str"]
 
                 params = {"confirm": "false"}
-                data = json.dumps({"name": channel["name"],
+                data = json.dumps({"name": name,
                                    "twitterScreenName": channel["handle"],
                                    "twitterUserId": userId,
                                    "industry": "general-(recommended)"})
@@ -292,6 +315,27 @@ class BWQueries(BWResource, bwdata.BWData):
 
         self.reload()
         return returnMess
+
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            if info["type"] == "search string":
+                self.upload(name=name, new_name=new_name, **info)
+            else:
+                raise KeyError("We cannot support automated renaming of channels at this time.")
 
     def backfill(self, query_id, backfill_date):
         """
@@ -444,8 +488,8 @@ class BWGroups(BWResource, bwdata.BWData):
 
     Attributes:
         queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object.
-        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
-        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object.
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.
     """
     general_endpoint = "querygroups"
     specific_endpoint = "querygroups"
@@ -464,6 +508,24 @@ class BWGroups(BWResource, bwdata.BWData):
         self.queries = BWQueries(self.project)
         self.tags = self.queries.tags
         self.categories = self.queries.categories
+
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            queries = [x["name"] for x in info["queries"]]
+            self.upload(name=name, new_name=new_name, queries=queries)
 
     def upload_queries_as_group(self, group_name, query_data_list, create_only=False, modify_only=False,
                                 backfill_date="", **kwargs):
@@ -600,12 +662,12 @@ class BWGroups(BWResource, bwdata.BWData):
 
 class BWMentions:
     """
-    This class handles patching lists of mentions.  
+    This class handles patching lists of mentions.
     For retrieving mentions, see the BWQueries or BWGroups class instead (as you must specify a query or group in order to retrieve mentions, we thought it most sensible to tie that task to the BWQueries and BWGroups classes).
 
     Attributes:
-        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
-        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object.
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.
     """
 
     def __init__(self, bwproject):
@@ -627,8 +689,8 @@ class BWMentions:
 
         Args:
             mentions:   List of mentions to be edited.
-            action:     Action to be taken when editing the mention.  See the list titled mutable in filters.py for the possible actions you can take to edit a mention. 
-            setting:    If the action is addTag or removeTag, the setting is a list of string(s) where each string is a tag name.  If the action is addCategories or removeCategories, the setting is a dictionary of in the format: {parent:[child1, child2, etc]} for any number of subcatagories (parent subcatagory names are strings).  See the dictionary titled mutable_options in filters.py for the accepted values for other actions.  
+            action:     Action to be taken when editing the mention.  See the list titled mutable in filters.py for the possible actions you can take to edit a mention.
+            setting:    If the action is addTag or removeTag, the setting is a list of string(s) where each string is a tag name.  If the action is addCategories or removeCategories, the setting is a dictionary of in the format: {parent:[child1, child2, etc]} for any number of subcatagories (parent subcatagory names are strings).  See the dictionary titled mutable_options in filters.py for the accepted values for other actions.
 
         Raises:
             KeyError:   If you pass in an invalid action or setting.
@@ -812,7 +874,7 @@ class BWLocationLists(BWResource):
         filled = {}
 
         if ("name" not in data) or ("locations" not in data):
-            raise KeyError("Need name and authors to upload locationlist", data)
+            raise KeyError("Need name and locations to upload locationlist", data)
 
         if data["name"] in self.ids:
             filled["id"] = self.ids[data["name"]]
@@ -863,9 +925,9 @@ class BWTags(BWResource):
 
 class BWCategories():
     """
-    This class provides an interface for Category operations within a prescribed project.  
+    This class provides an interface for Category operations within a prescribed project.
 
-    This class is odd because of its id structure, and for this reason it does not inherit from BWResource. 
+    This class is odd because of its id structure, and for this reason it does not inherit from BWResource.
     Instead of just storing parent category id, we need to store parent categories and their ids, as well as their children and their children ids - hence the nested dictionary.
 
     Attributes:
@@ -916,7 +978,7 @@ class BWCategories():
         """
         Uploads a category.
 
-        You can upload a new category, add subcategories to an existing category, overwrite the subcategories of an existing category, or change the name of an existing category with this function. 
+        You can upload a new category, add subcategories to an existing category, overwrite the subcategories of an existing category, or change the name of an existing category with this function.
 
         Args:
             create_only:        If True and the category already exists, no action will be triggered - Optional.  Defaults to False.
@@ -933,7 +995,7 @@ class BWCategories():
         """
         Uploads a list of categories.
 
-        You can upload a new categories, add subcategories to existing categories, overwrite the subcategories of existing categories, or change the name of an existing categories with this function. 
+        You can upload a new categories, add subcategories to existing categories, overwrite the subcategories of existing categories, or change the name of an existing categories with this function.
 
         Args:
             data_list:          List of dictionaries where each dictionary contains at least name (parent category name) and children (list of subcategories), and optionally multiple (boolean - indicates if subcategories are mutually exclusive) and/or new_name (string) if you would like to change the name of an existing category.
@@ -1024,7 +1086,7 @@ class BWCategories():
 
     def delete_all(self, names):
         """
-        Deletes a list of categories or subcategories.  
+        Deletes a list of categories or subcategories.
         If you're deleting the entire parent category then you can pass in a simple list of parent category names.  If you're deleting subcategories, then you need to pass in a list of dictionaries in the format: {name: parentname, children: [child1todelete, child2todelete, ...]}
 
         Args:
@@ -1090,9 +1152,9 @@ class BWRules(BWResource):
     This class provides an interface for Rule operations within a prescribed project.
 
     Attributes:
-        queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object. 
-        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
-        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+        queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object.
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object.
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.
     """
 
     general_endpoint = "rules"
@@ -1119,7 +1181,7 @@ class BWRules(BWResource):
         	data_list:			A list of dictionaries, where each dictionaries contains a name, ruleAction and (optional but recommended) filters.  It is best practice to first call rule_action() and filters() to generate error checked versions of these two required dictionaries.  Optionally, you can also pass in enabled (boolean: default True), scope (string. default based on presence or absence of term queryName) and/or backfill (boolean. default False. To apply the rule to already existing mentions, set backfill to True).
         	create_only:        If True and the category already exists, no action will be triggered - Optional.  Defaults to False.
         	modify_only:        If True and the category does not exist, no action will be triggered - Optional.  Defaults to False.
-        
+
         Raises:
         	KeyError:	If an item in the data_list does not include a name.
         	KeyError:	If an item in the data_list does not include a ruleAction.
@@ -1134,14 +1196,36 @@ class BWRules(BWResource):
             if "backfill" in data and data["backfill"] == True:
                 self.project.post(endpoint="rules/" + str(rules[data["name"]]) + "/backfill")
 
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            rule={}
+            rule["ruleAction"] = self.rule_action(**info["ruleAction"])
+            if (info["filter"]["queryName"] == "Whole Project"):
+                info["filter"].pop("queryName")
+            rule["filter"] = self.filters(**info["filter"])
+            self.upload(name=name, new_name=new_name, **rule)
+
     def rule_action(self, action, setting):
-        """ 
-        Formats rule action into dictionary and checks that its contents are valid. 
+        """
+        Formats rule action into dictionary and checks that its contents are valid.
         If the action is category or tag related and the cat or tag doesn't yet exist, we upload it here.
 
         Args:
         	action:		Action to be taken by the rule.  See the list "mutable" in filters.py for a full list of options.
-        	setting:	Setting for the action.  E.g. If action is addCategories or removeCategories: setting = {parent:[child]}. 
+        	setting:	Setting for the action.  E.g. If action is addCategories or removeCategories: setting = {parent:[child]}.
 
         Raises:
         	KeyError:	If the action input is invalid.
@@ -1197,14 +1281,14 @@ class BWRules(BWResource):
         return fil
 
     def rule(self, name, action, filter, **kwargs):
-        """ 
+        """
         When using upload_all(), it may be useful to use this function first to keep rule dictionaries organized and formatted correctly.
 
         Args:
         	name:	Rule name.
         	action:	Rule action.  It is best practice to first call rule_action() to generate an error checked version of this required dictionary.
         	filter:	Rule filter.  It is best practice to first call filters() to generate a formatted version of this required dictionary.
-        	kwargs:	Additional rule information - Optional.  Accepted keyword arguments are enabled (boolean: default True), scope (string. default based on presence or absence of term queryName) and/or backfill (boolean. default False. To apply the rule to already existing mentions, set backfill to True).  
+        	kwargs:	Additional rule information - Optional.  Accepted keyword arguments are enabled (boolean: default True), scope (string. default based on presence or absence of term queryName) and/or backfill (boolean. default False. To apply the rule to already existing mentions, set backfill to True).
 
         Returns:
         	Dictionary with all rule information, ready to be uploaded.
@@ -1274,7 +1358,10 @@ class BWRules(BWResource):
                     break
 
             rules.append({"name": name, "filter": filters, "ruleAction": ruleAction})
-        return rules
+        if len(rules) == 1:
+            return(rules[0])
+        else:
+            return rules
 
     def _fill_data(self, data):
         """ internal use """
@@ -1288,10 +1375,14 @@ class BWRules(BWResource):
             filled["projectName"] = data["projectName"] if ("projectName" in data) else self.project.project_name
             filled["queryName"] = data["queryName"] if ("queryName" in data) else None
 
+        if "new_name" in data:
+            filled["name"] = data["new_name"]
+        else:
+            filled["name"] = data["name"]
+
         filled["enabled"] = data["enabled"] if ("enabled" in data) else True
         filled["filter"] = data["filter"] if ("filter" in data) else {}
         filled["ruleAction"] = data["ruleAction"]
-        filled["name"] = data["name"]
         filled["projectId"] = self.project.project_id
 
         # validating the query search - comment this out to skip validation
@@ -1448,9 +1539,9 @@ class BWSignals(BWResource):
     This class provides an interface for signals operations within a prescribed project (e.g. uploading, downloading).
 
     Attributes:
-        queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object. 
-        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object. 
-        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.  
+        queries:        All queries in the project - handeled at the class level to prevent repetitive API calls.  This is a BWQueries object.
+        tags:           All tags in the project - handeled at the class level to prevent repetitive API calls.  This is a BWTags object.
+        categories:     All categories in the project - handeled at the class level to prevent repetitive API calls.  This is a BWCategories object.
     """
 
     general_endpoint = "signals/groups"
@@ -1468,6 +1559,25 @@ class BWSignals(BWResource):
         self.queries = BWQueries(self.project)
         self.tags = self.queries.tags
         self.categories = self.queries.categories
+
+    def rename(self, name, new_name):
+        """
+        Renames an existing resource.
+
+        Args:
+            name:       Name of existing resource.
+            new_name:   New name for the resource.
+
+        Raises:
+            KeyError:   If the resource does not exist.
+        """
+        if name not in self.ids:
+            raise KeyError("Cannot rename a " + self.resource_type + " which does not exist", name)
+        else:
+            info = self.get(name=name)
+            info.pop("name")
+            info["queries"] = info.pop("queryIds")
+            self.upload(name=name, new_name=new_name, **info)
 
     def _fill_data(self, data):
         filled = {}
@@ -1491,7 +1601,10 @@ class BWSignals(BWResource):
 
         filled["queryIds"] = []
         for query in data["queries"]:
-            filled["queryIds"].append(self.queries.ids[query])
+            if isinstance(query, int):
+                filled["queryIds"].append(query)
+            else:
+                filled["queryIds"].append(self.queries.ids[query])
 
         filled["subscribers"] = data["subscribers"]
 
@@ -1503,8 +1616,14 @@ class BWSignals(BWResource):
     def _name_to_id(self, attribute, setting):
         """ internal use """
         ids = []
-        if attribute in ["category", "xcategory"]:
+        if attribute in ["includeCategoryIds", "excludeCategoryIds"]:
+            for category in setting:
+                if not isinstance(category, int):
+                    # already in ID form
+                    raise KeyError("Must pass in ids with "+attribute+" parameter, or use names and the appropriate category/xcategory or parentCategory/xparentCategory parameter.")
+            return {attribute: setting}
 
+        elif attribute in ["category", "xcategory"]:
             for category in setting:
                 if isinstance(category, int):
                     # already in ID form
@@ -1535,7 +1654,7 @@ class BWSignals(BWResource):
             else:
                 return {"excludeCategoryIds": ids}
 
-        elif attribute in ["tag", "xtag"]:
+        elif attribute in ["tag", "xtag", "includeTagIds", "excludeTagIds"]:
             if not isinstance(setting, list):
                 setting = [setting]
             for tag in setting:
@@ -1545,7 +1664,7 @@ class BWSignals(BWResource):
                 else:
                     ids.append(self.tags.ids[tag])
 
-            if attribute == "tag":
+            if attribute in ["tag", "includeTagIds"]:
                 return {"includeTagIds": ids}
             else:
                 return {"excludeTagIds": ids}
