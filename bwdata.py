@@ -767,16 +767,16 @@ class BWData:
         for n in name_list:
             if isinstance(n, str):
                 if n not in self.ids:
-                    logger.warn("Could not find {} with name {}".format(self.resource_type, n), self.ids)
+                    logger.error("Could not find {} with name {}".format(self.resource_type, n), self.ids)
                 else:
                     id_list.append(self.ids[n])
             elif isinstance(n, int):
                 if n not in self.ids.values():
-                    logger.warn("Could not find {} with id {}".format(self.resource_type, n), self.ids)
+                    logger.error("Could not find {} with id {}".format(self.resource_type, n), self.ids)
                 else:
                     id_list.append(n)
             else:
-                logger.warn("Must reference {} with type string or int".format(self.resource_type), n)
+                logger.error("Must reference {} with type string or int".format(self.resource_type), n)
 
         if len(id_list) == 0:
             raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type), name)
