@@ -3,6 +3,11 @@ bwdata contains the BWData class.
 """
 import datetime
 import filters
+import logging
+
+
+logger = logging.getLogger("bwapi")
+
 
 class BWData:
     """
@@ -35,16 +40,13 @@ class BWData:
 
             if len(next_mentions) > 0:
                 all_mentions += next_mentions
-
-                if self.console_report:
-                    print("Page " + str(params["page"]) + " of " + self.resource_type + " " + str(name) + " retrieved")
+                logger.info("Page {} of {} {} retrieved".format(params["page"], self.resource_type, name))
             else:
                 break
 
             params["page"] += 1
 
-        if self.console_report:
-            print(str(len(all_mentions)) + " mentions downloaded")
+        logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
     def num_mentions(self, name=None, startDate=None, **kwargs):
@@ -765,16 +767,16 @@ class BWData:
         for n in name_list:
             if isinstance(n, str):
                 if n not in self.ids:
-                    raise KeyError("Could not find {} with name {}".format(self.resource_type, n), self.ids)
+                    logger.warn("Could not find {} with name {}".format(self.resource_type, n), self.ids)
                 else:
                     id_list.append(self.ids[n])
             elif isinstance(n, int):
                 if n not in self.ids.values():
-                    raise KeyError("Could not find {} with id {}".format(self.resource_type, n), self.ids)
+                    logger.warn("Could not find {} with id {}".format(self.resource_type, n), self.ids)
                 else:
                     id_list.append(n)
             else:
-                raise TypeError("Must reference {} with type string or int".format(self.resource_type), n)
+                logger.warn("Must reference {} with type string or int".format(self.resource_type), n)
 
         if len(id_list) == 0:
             raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type), name)
@@ -797,7 +799,6 @@ class BWData:
             else:
                 raise KeyError("invalid input for given parameter", param)
 
-        print(filled)
         return filled
 
     def _get_mentions_page(self, params, page):

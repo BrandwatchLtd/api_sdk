@@ -8,6 +8,11 @@ import filters
 import requests
 import threading
 import bwdata
+import logging
+
+
+logger = logging.getLogger("bwapi")
+
 
 class BWResource:
     """
@@ -15,7 +20,6 @@ class BWResource:
 
     Attributes:
         project:        Brandwatch project.  This is a BWProject object.
-        console_report: Boolean flag to control console reporting.  Inherited from the project.
         ids:            Query ids, organized in a dictionary of the form {query1name: query1id, query2name: query2id, ...}
     """
 
@@ -27,7 +31,6 @@ class BWResource:
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        self.console_report = bwproject.console_report
         self.ids = {}
         self.reload()
 
@@ -117,8 +120,7 @@ class BWResource:
             if "errors" not in response:
                 resources[response["name"]] = response["id"]
 
-            if self.console_report:
-                print(self.resource_type + ": " + response["name"] + " posted")
+            logger.info("{} {} posted".format(self.resource_type, response["name"]))
 
         self.reload()
         return resources
@@ -161,10 +163,8 @@ class BWResource:
             if name in self.ids:
                 resource_id = self.ids[name]
                 self.project.delete(endpoint=self.specific_endpoint + "/" + str(resource_id))
-
-                if self.console_report:
-                    print(self.resource_type + ": " + name + " deleted")
-
+                logger.info("{} {} deleted".format(self.resource_type, name))
+                
         self.reload()
 
     def _fill_data():
@@ -310,8 +310,8 @@ class BWQueries(BWResource, bwdata.BWData):
 
             if "errors" not in response:
                 returnMess[response["name"]] = response["id"]
-            elif self.console_report:
-                print(response)
+            else:
+                logger.error(response)
 
         self.reload()
         return returnMess
@@ -556,9 +556,7 @@ class BWGroups(BWResource, bwdata.BWData):
         """
         # No need to delete the group itself, since a group will be deleted automatically when empty
         BWQueries(self.project).delete_all(self.get_group_queries(name))
-
-        if self.console_report:
-            print("Group " + name + " deleted")
+        logger.info("Group {} deleted".format(name))
 
     def get_group_queries(self, name):
         """
@@ -678,7 +676,6 @@ class BWMentions:
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        self.console_report = bwproject.console_report
         self.tags = BWTags(self.project)
         self.categories = BWCategories(self.project)
 
@@ -724,8 +721,7 @@ class BWMentions:
         if "errors" in response:
             raise KeyError("patch failed", response)
 
-        if self.console_report:
-            print(str(len(response)) + " mentions updated")
+        logger.info("{} mentions updated".format(len(response)))
 
     def _valid_patch_input(self, action, setting):
         """ internal use """
@@ -932,7 +928,6 @@ class BWCategories():
 
     Attributes:
         project:        Brandwatch project.  This is a BWProject object.
-        console_report: Boolean flag to control console reporting.  Inherited from the project.
         ids:            Category information, organized in a dictionary of the form {category1name: {id: category1id, multiple: True/False, children: {child1name: child1id, ...}}, ...}.  Where multiple is a boolean flag to indicate whether or not to make subcategories mutually exclusive.
     """
 
@@ -944,7 +939,6 @@ class BWCategories():
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        self.console_report = bwproject.console_report
         self.ids = {}
         self.reload()
 
