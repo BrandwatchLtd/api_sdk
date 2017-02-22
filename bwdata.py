@@ -776,6 +776,9 @@ class BWData:
             else:
                 raise TypeError("Must reference {} with type string or int".format(self.resource_type), n)
 
+        if len(id_list) == 0:
+            raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type), name)
+
         filled = {}
         filled[self.resource_id_name] = id_list
         filled["startDate"] = startDate
