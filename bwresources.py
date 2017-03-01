@@ -117,10 +117,11 @@ class BWResource:
             else:
                 continue
 
-            if "errors" not in response:
+            try:
                 resources[response["name"]] = response["id"]
-
-            logger.info("{} {} posted".format(self.resource_type, response["name"]))
+                logger.info("{} {} posted".format(self.resource_type, response["name"]))
+            except KeyError:
+                logger.error("{} {} failed to post:\n{}".format(self.resource_type, response["name"], response["errors"])
 
         self.reload()
         return resources
@@ -164,7 +165,7 @@ class BWResource:
                 resource_id = self.ids[name]
                 self.project.delete(endpoint=self.specific_endpoint + "/" + str(resource_id))
                 logger.info("{} {} deleted".format(self.resource_type, name))
-                
+
         self.reload()
 
     def _fill_data():
