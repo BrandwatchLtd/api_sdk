@@ -1379,8 +1379,7 @@ class BWRules(BWResource):
 
         # validating the query search - comment this out to skip validation
         if "search" in filled["filter"]:
-            self.project.validate_rule_search(query=filled["filter"]["search"], language="en", rule_name=filled["name"])
-            print("here")
+            self.project.validate_rule_search(query=filled["filter"]["search"], language="en")
 
         if "scope" in data:
             filled["scope"] = data["scope"]
