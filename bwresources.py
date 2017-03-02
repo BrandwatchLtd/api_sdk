@@ -117,10 +117,8 @@ class BWResource:
             else:
                 continue
 
-            if "errors" not in response:
-                resources[response["name"]] = response["id"]
-
-            logger.info("{} {} posted".format(self.resource_type, response["name"]))
+            logger.info("Uploading {} {}".format(self.resource_type, response["name"]))
+            resources[response["name"]] = response["id"]
 
         self.reload()
         return resources
@@ -164,7 +162,7 @@ class BWResource:
                 resource_id = self.ids[name]
                 self.project.delete(endpoint=self.specific_endpoint + "/" + str(resource_id))
                 logger.info("{} {} deleted".format(self.resource_type, name))
-                
+
         self.reload()
 
     def _fill_data():
@@ -1381,7 +1379,8 @@ class BWRules(BWResource):
 
         # validating the query search - comment this out to skip validation
         if "search" in filled["filter"]:
-            self.project.validate_rule_search(query=filled["filter"]["search"], language="en")
+            self.project.validate_rule_search(query=filled["filter"]["search"], language="en", rule_name=filled["name"])
+            print("here")
 
         if "scope" in data:
             filled["scope"] = data["scope"]
