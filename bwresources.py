@@ -117,11 +117,14 @@ class BWResource:
             else:
                 continue
 
-            try:
-                resources[response["name"]] = response["id"]
-                logger.info("{} {} posted".format(self.resource_type, response["name"]))
-            except KeyError:
-                logger.error("{} {} failed to post:\n{}".format(self.resource_type, response["name"], response["errors"])
+            logger.info("Uploading {} {}".format(self.resource_type, response["name"]))
+            resources[response["name"]] = response["id"]
+
+            # try:
+            #     resources[response["name"]] = response["id"]
+            #     logger.info("{} {} posted".format(self.resource_type, response["name"]))
+            # except KeyError:
+            #     logger.error("{} {} failed to post:\n{}".format(self.resource_type, response["name"], response["errors"]))
 
         self.reload()
         return resources
@@ -1382,7 +1385,8 @@ class BWRules(BWResource):
 
         # validating the query search - comment this out to skip validation
         if "search" in filled["filter"]:
-            self.project.validate_rule_search(query=filled["filter"]["search"], language="en")
+            self.project.validate_rule_search(query=filled["filter"]["search"], language="en", rule_name=filled["name"])
+            print("here")
 
         if "scope" in data:
             filled["scope"] = data["scope"]
