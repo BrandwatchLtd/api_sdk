@@ -120,12 +120,6 @@ class BWResource:
             logger.info("Uploading {} {}".format(self.resource_type, response["name"]))
             resources[response["name"]] = response["id"]
 
-            # try:
-            #     resources[response["name"]] = response["id"]
-            #     logger.info("{} {} posted".format(self.resource_type, response["name"]))
-            # except KeyError:
-            #     logger.error("{} {} failed to post:\n{}".format(self.resource_type, response["name"], response["errors"]))
-
         self.reload()
         return resources
 
