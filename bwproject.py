@@ -137,8 +137,6 @@ class BWUser:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(verb=requests.get, address="query-validation", params=kwargs)
-        if valid_search["errors"]:
-            raise KeyError("Search string error: ", valid_search["errors"])
 
     def validate_rule_search(self, **kwargs):
         """
@@ -157,8 +155,6 @@ class BWUser:
             kwargs["language"] = ["en"]
 
         valid_search = self.request(verb=requests.get, address="query-validation/searchwithin", params=kwargs)
-        if valid_search["errors"]:
-            raise KeyError("Search string error: ", valid_search["errors"])
 
     def request(self, verb, address, params={}, data={}):
         """
@@ -204,7 +200,8 @@ class BWUser:
                             headers={"Content-type": "application/json"})
 
         if "errors" in response.json() and response.json()["errors"]:
-            logger.error()
+            logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
+            raise RuntimeError(response.json()["errors"])
 
         logger.debug(response.url)
         return response.json()
