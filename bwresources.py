@@ -226,6 +226,12 @@ class BWQueries(BWResource, bwdata.BWData):
 
         queries = super(BWQueries, self).upload_all(data_list, create_only=False, modify_only=False)
 
+        #backfill if passed in with individual query data
+        for query in data_list:
+            if "backfill_date" in query:
+                self.backfill(queries[query["name"]], query["backfill_date"])
+
+        #backfill if passed in for all
         if backfill_date != "":
             for query in queries:
                 self.backfill(queries[query], backfill_date)
