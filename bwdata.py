@@ -761,6 +761,11 @@ class BWData:
         return self.project.get(endpoint="queries/"+str(query_id)+"/"+"date-range")
 
     def _fill_params(self, name, startDate, data):
+        try:
+            name = int(name)
+        except ValueError:
+            pass
+
         name_list = [name] if isinstance(name, (str, int)) else name
         id_list = []
 
