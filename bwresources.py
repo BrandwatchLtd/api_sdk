@@ -379,10 +379,14 @@ class BWQueries(BWResource, bwdata.BWData):
         return mention["mention"]
 
     def _name_to_id(self, attribute, setting):
-
         if isinstance(setting, int):
-            # already in ID form
             return setting
+
+        if isinstance(setting, list):
+            try:
+                return [int(i) for i in setting]
+            except ValueError:
+                pass
 
         elif attribute in ["category", "xcategory"]:
             # setting is a dictionary with one key-value pair, so this loop iterates only once
