@@ -68,7 +68,9 @@ class BWData:
         next_page = True
         page_idx = 0
 
-        while next_page and page_idx < max_pages:
+        while next_page:
+            if max_pages and page_idx >= max_pages:
+                break
             next_page = self.get_mentions(name, startDate, max_pages=page_idx + 1, page=page_idx, **kwargs)
             if iter_by_page and next_page:
                 yield next_page
