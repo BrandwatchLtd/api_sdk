@@ -5,7 +5,6 @@ import datetime
 import filters
 import logging
 
-
 logger = logging.getLogger("bwapi")
 
 
@@ -35,7 +34,7 @@ class BWData:
         params["page"] = kwargs["page"] if "page" in kwargs else 0
         all_mentions = []
 
-        while max_pages == None or params["page"] < max_pages:
+        while max_pages is None or params["page"] < max_pages:
             next_mentions = self._get_mentions_page(params, params["page"])
 
             if len(next_mentions) > 0:
@@ -48,6 +47,36 @@ class BWData:
 
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
+
+    def iter_mentions(self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs):
+        """
+        Same as get_mentions function, but returns an iterator. Fetch one page at a time to reduce memory footprint.
+
+        Args:
+            name:          You must pass in a query / group name (string).
+            startDate:     You must pass in a start date (string).
+            max_pages:     Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
+            iter_by_page:  Enumerate by page when set to True, else by mention, default to False - Optional.
+            kwargs:        All other filters are optional and can be found in filters.py.
+
+        Raises:
+            KeyError:   If the mentions call fails.
+
+        Returns:
+            A list of mentions.
+        """
+        next_page = True
+        page_idx = 0
+
+        while next_page and page_idx < max_pages:
+            next_page = self.get_mentions(name, startDate, max_pages=page_idx + 1, page=page_idx, **kwargs)
+            if iter_by_page and next_page:
+                yield next_page
+            else:
+                for mention in next_page:
+                    yield mention
+            page_idx += 1
+        return
 
     def num_mentions(self, name=None, startDate=None, **kwargs):
         """
@@ -226,10 +255,11 @@ class BWData:
         Returns:
             A dictionary representation of the component key insights
         """
-        key_insights = {"total_mentions":self.get_keyinsights_mention_count(name, startDate),
-        "unique_authors":self.get_keyinsights_author_count(name, startDate),
-        "topic_trends":self.get_keyinsights_topics(name, startDate),
-        "rising_news":self.get_keyinsights_news(name, startDate)}
+        key_insights = {"total_mentions": self.get_keyinsights_mention_count(name, startDate),
+                        "unique_authors": self.get_keyinsights_author_count(name, startDate),
+                        "topic_trends":   self.get_keyinsights_topics(name, startDate),
+                        "rising_news":    self.get_keyinsights_news(name, startDate),
+                        }
         return key_insights
 
     def get_keyinsights_mention_count(self, name=None, startDate=None, **kwargs):
@@ -306,9 +336,9 @@ class BWData:
         Returns:
             A dictionary representation of the summary component analysis
         """
-        summary = {"sentiment":self.get_summary_sentiment(name, startDate),
-        "topsites":self.get_summary_topsites(name, startDate),
-        "pagetypes":self.get_summary_pagetypes(name, startDate)}
+        summary = {"sentiment": self.get_summary_sentiment(name, startDate),
+                   "topsites":  self.get_summary_topsites(name, startDate),
+                   "pagetypes": self.get_summary_pagetypes(name, startDate)}
         return summary
 
     def get_summary_sentiment(self, name=None, startDate=None, **kwargs):
@@ -368,10 +398,11 @@ class BWData:
         Returns:
             A dictionary representation of the twitter insights component data
         """
-        twitter_insights = {"hashtags":self.get_twitter_insights_feature(name,startDate,"hashtags"),
-        "emoticons":self.get_twitter_insights_feature(name,startDate,"emoticons"),
-        "urls":self.get_twitter_insights_feature(name,startDate,"urls"),
-        "mentionedauthors":self.get_twitter_insights_feature(name,startDate,"mentionedauthors")}
+        twitter_insights = {"hashtags":         self.get_twitter_insights_feature(name, startDate, "hashtags"),
+                            "emoticons":        self.get_twitter_insights_feature(name, startDate, "emoticons"),
+                            "urls":             self.get_twitter_insights_feature(name, startDate, "urls"),
+                            "mentionedauthors": self.get_twitter_insights_feature(name, startDate, "mentionedauthors"),
+                            }
         return twitter_insights
 
     def get_twitter_insights_feature(self, name=None, startDate=None, feature=None, **kwargs):
@@ -387,7 +418,7 @@ class BWData:
         Returns:
             A dictionary representation of the feature of the twitter insights analysis component
         """
-        if not (feature):
+        if not feature:
             raise KeyError("You must pass in a feature")
 
         params = self._fill_params(name, startDate, kwargs)
@@ -427,13 +458,13 @@ class BWData:
         query_id = self.ids[name]
         date_range_list = self._get_date_ranges(query_id)
         date_range_ids = [dr["id"] for dr in date_range_list if dr["name"] in date_ranges]
-
-        if (date_range_ids == [] or date_ranges == None) :
+        
+        if date_range_ids == [] or date_ranges is None:
             raise KeyError("You must pass in a valid list of date range(s)")
 
         params = self._fill_params(name, startDate, kwargs)
         params["dateRanges"] = date_range_ids
-        return self.project.get(endpoint="data/volume/dateRanges/days", params = params)["results"]
+        return self.project.get(endpoint="data/volume/dateRanges/days", params=params)["results"]
 
         ## Channels
 
@@ -450,10 +481,11 @@ class BWData:
         Returns:
             A dictionary representation of the entire facebook analytics component data
         """
-        fb_analytics = {"audience":self.get_fb_analytics_partial(name,startDate,"audience"),
-        "ownerActivity":self.get_fb_analytics_partial(name,startDate,"ownerActivity"),
-        "audienceActivity":self.get_fb_analytics_partial(name,startDate,"audienceActivity"),
-        "impressions":self.get_fb_analytics_partial(name,startDate,"impressions")}
+        fb_analytics = {"audience":         self.get_fb_analytics_partial(name, startDate, "audience"),
+                        "ownerActivity":    self.get_fb_analytics_partial(name, startDate, "ownerActivity"),
+                        "audienceActivity": self.get_fb_analytics_partial(name, startDate, "audienceActivity"),
+                        "impressions":      self.get_fb_analytics_partial(name, startDate, "impressions"),
+                        }
         return fb_analytics
 
     def get_fb_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
@@ -470,11 +502,11 @@ class BWData:
         Returns:
             A dictionary representation of the specified part of the facebook analytics component data
         """
-        if not (metadata_type):
+        if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]["values"]
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
 
     def get_fb_audience(self, name=None, startDate=None, **kwargs):
         """
@@ -490,7 +522,7 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params = params)["results"]
+        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params=params)["results"]
 
     def get_fb_comments(self, name=None, startDate=None, **kwargs):
         """
@@ -506,7 +538,7 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/facebookcomments", params = params)["results"]
+        return self.project.get(endpoint="data/mentions/facebookcomments", params=params)["results"]
 
     def get_fb_posts(self, name=None, startDate=None, **kwargs):
         """
@@ -522,7 +554,7 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/facebookposts", params = params)["results"]
+        return self.project.get(endpoint="data/mentions/facebookposts", params=params)["results"]
 
     def get_ig_interactions(self, name=None, startDate=None, **kwargs):
         """
@@ -537,8 +569,8 @@ class BWData:
         Returns:
             A dictionary representation of the entire instagram interactions component data.
         """
-        instagram_interactions ={"ownerActivity":self.get_ig_interactions_partial(name,startDate,"ownerActivity"),
-        "audienceActivity":self.get_ig_interactions_partial(name,startDate,"audienceActivity")}
+        instagram_interactions ={"ownerActivity": self.get_ig_interactions_partial(name, startDate, "ownerActivity"),
+                                 "audienceActivity": self.get_ig_interactions_partial(name, startDate, "audienceActivity")}
         return instagram_interactions
 
     def get_ig_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
@@ -555,11 +587,11 @@ class BWData:
         Returns:
             A dictionary representation of the specified part of the instagram interactions component data.
         """
-        if not (metadata_type):
+        if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]
 
     def get_ig_insights(self, name=None, startDate=None, **kwargs):
         """
@@ -574,9 +606,10 @@ class BWData:
         Returns:
             A dictionary representation of the entire instagram owner insights component data.
         """
-        instagram_insights ={"mentionedauthors":self.get_ig_insights_partial(name,startDate,"mentionedauthors"),
-        "hashtags":self.get_ig_insights_partial(name,startDate,"hashtags"),
-        "emoticons":self.get_ig_insights_partial(name,startDate,"emoticons")}
+        instagram_insights ={"mentionedauthors": self.get_ig_insights_partial(name, startDate, "mentionedauthors"),
+                             "hashtags":         self.get_ig_insights_partial(name, startDate, "hashtags"),
+                             "emoticons":        self.get_ig_insights_partial(name, startDate, "emoticons"),
+                             }
         return instagram_insights
 
     def get_ig_insights_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
@@ -593,11 +626,11 @@ class BWData:
         Returns:
             A list of authors, hashtags, or emoticons, each having a dictionary representation of their respective instagram insights data
         """
-        if not (metadata_type):
+        if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type, params = params)["results"]
+        return self.project.get(endpoint="data/"+metadata_type, params=params)["results"]
 
     def get_ig_posts(self, name=None, startDate=None, **kwargs):
         """
@@ -614,7 +647,7 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions", params = params)["results"]
+        return self.project.get(endpoint="data/mentions", params=params)["results"]
 
     def get_ig_followers(self, name=None, startDate=None, **kwargs):
         """
@@ -631,8 +664,8 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/audience/queries/days", params = params)["results"][0]["values"]
-
+        return self.project.get(endpoint="data/audience/queries/days", params=params)["results"][0]["values"]
+    
     def get_tweets(self, name=None, startDate=None, **kwargs):
         """
         Retrieves the twitter tweets component data.
@@ -648,8 +681,8 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/tweets", params = params)["results"]
-
+        return self.project.get(endpoint="data/mentions/tweets", params=params)["results"]
+        
     def get_tw_analytics(self, name=None, startDate=None, **kwargs):
         """
         Retrieves the entire twitter analytics component data.
@@ -663,10 +696,11 @@ class BWData:
         Returns:
             A dictionary representation of the entire twitter analytics component data
         """
-        tw_analytics = {"audience":self.get_tw_analytics_partial(name,startDate,"audience"),
-        "ownerActivity":self.get_tw_analytics_partial(name,startDate,"ownerActivity"),
-        "audienceActivity":self.get_tw_analytics_partial(name,startDate,"audienceActivity"),
-        "impressions":self.get_tw_analytics_partial(name,startDate,"impressions")}
+        tw_analytics = {"audience":         self.get_tw_analytics_partial(name, startDate, "audience"),
+                        "ownerActivity":    self.get_tw_analytics_partial(name, startDate, "ownerActivity"),
+                        "audienceActivity": self.get_tw_analytics_partial(name, startDate, "audienceActivity"),
+                        "impressions":      self.get_tw_analytics_partial(name, startDate, "impressions"),
+                        }
         return tw_analytics
 
     def get_tw_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
@@ -683,11 +717,11 @@ class BWData:
         Returns:
             A dictionary representation of the specified part of the twitter analytics component data
         """
-        if not (metadata_type):
+        if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params = params)["results"][0]["values"]
+        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
 
     def get_tw_audience(self, name=None, startDate=None, **kwargs):
         """
@@ -703,7 +737,7 @@ class BWData:
             A list of twitter authors, each having a dictionary representation of their respective twitter data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/toptweeters/queries", params = params)["results"]
+        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
 
     def get_dem_summary(self, name=None, startDate=None, **kwargs):
         """
@@ -718,10 +752,11 @@ class BWData:
         Returns:
             A dictionary representation of the entire demographics summary component data
         """
-        dem_summary = {"gender":self.get_dem_summary_partial(name,startDate,"gender"),
-        "interest":self.get_dem_summary_partial(name,startDate,"interest"),
-        "profession":self.get_dem_summary_partial(name,startDate,"profession"),
-        "countries":self.get_dem_summary_partial(name,startDate,"countries")}
+        dem_summary = {"gender":     self.get_dem_summary_partial(name, startDate, "gender"),
+                       "interest":   self.get_dem_summary_partial(name, startDate, "interest"),
+                       "profession": self.get_dem_summary_partial(name, startDate, "profession"),
+                       "countries":  self.get_dem_summary_partial(name, startDate, "countries"),
+                       }
         return dem_summary
 
     def get_dem_summary_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
@@ -740,11 +775,11 @@ class BWData:
             A dictionary representation of the top breakdowns (gender, interest, etc)
         """
 
-        if not (metadata_type):
+        if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="demographics/"+metadata_type, params = params)
+        return self.project.get(endpoint="demographics/"+metadata_type, params=params)
 
     def _get_date_ranges(self, query_id=None):
         """
