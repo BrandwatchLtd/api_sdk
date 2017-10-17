@@ -855,7 +855,8 @@ class BWData:
     def _valid_input(self, param, setting):
         if (param in filters.params) and (not isinstance(setting, filters.params[param])):
             return False
-        elif param in filters.special_options and setting not in filters.special_options[param]:
-            return False
+        elif param in filters.special_options:
+            setting = setting if isinstance(setting, list) else [setting]
+            return all(map(lambda x: x in filters.special_options[param], setting))
         else:
             return True
