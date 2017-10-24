@@ -383,68 +383,67 @@ class BWQueries(BWResource, bwdata.BWData):
             return setting
 
         elif isinstance(setting, list):
-            if attribute in ["category", "xcategory"]:
-                # setting is a dictionary with one key-value pair, so this loop iterates only once
-                # but is necessary to extract the values in the dictionary
-                ids = []
-                for category in setting:
-                    parent = category
-                    children = setting[category]
+            try:
+                return [int(i) for i in setting]
+            except ValueError:
+                pass
+
+        if attribute in ["category", "xcategory"]:
+            # setting is a dictionary with one key-value pair, so this loop iterates only once
+            # but is necessary to extract the values in the dictionary
+            ids = []
+            for category in setting:
+                parent = category
+                children = setting[category]
                 for child in children:
                     ids.append(self.categories.ids[parent]["children"][child])
-                return ids
+            return ids
 
-            elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
-                #plural included for get_charts syntax
-                #note: parentCategories and categories params will be ignored for everything but chart calls
-                if not isinstance(setting, list):
-                    setting = [setting]
-                ids = []
-                for s in setting:
-                    ids.append(self.categories.ids[s]["id"])
-                return ids
+        elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
+            # plural included for get_charts syntax
+            # note: parentCategories and categories params will be ignored for everything but chart calls
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(self.categories.ids[s]["id"])
+            return ids
 
-            elif attribute in ["tag", "xtag", "tags"]:
-                #plural included for get_charts syntax
-                if not isinstance(setting, list):
-                    setting = [setting]
-                ids = []
-                for s in setting:
-                    ids.append(self.tags.ids[s])
-                return ids
+        elif attribute in ["tag", "xtag", "tags"]:
+            # plural included for get_charts syntax
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(self.tags.ids[s])
+            return ids
 
-            elif attribute in ["authorGroup", "xauthorGroup"]:
-                authorlists = BWAuthorLists(self.project)
-                if not isinstance(setting, list):
-                    setting = [setting]
-                ids = []
-                for s in setting:
-                    ids.append(authorlists.get(s)["id"])
-                return ids
+        elif attribute in ["authorGroup", "xauthorGroup"]:
+            authorlists = BWAuthorLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(authorlists.get(s)["id"])
+            return ids
 
-            elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
-                locationlists = BWLocationLists(self.project)
-                if not isinstance(setting, list):
-                    setting = [setting]
-                ids = []
-                for s in setting:
-                    ids.append(locationlists.get(s)["id"])
-                return ids
+        elif attribute in ["locationGroup", "xlocationGroup", "authorLocationGroup", "xauthorLocationGroup"]:
+            locationlists = BWLocationLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(locationlists.get(s)["id"])
+            return ids
 
-            elif attribute in ["siteGroup", "xsiteGroup"]:
-                sitelists = BWSiteLists(self.project)
-                if not isinstance(setting, list):
-                    setting = [setting]
-                ids = []
-                for s in setting:
-                    ids.append(sitelists.get(s)["id"])
-                return ids
-
-            else:
-                try:
-                    return [int(i) for i in setting]
-                except ValueError:
-                    pass
+        elif attribute in ["siteGroup", "xsiteGroup"]:
+            sitelists = BWSiteLists(self.project)
+            if not isinstance(setting, list):
+                setting = [setting]
+            ids = []
+            for s in setting:
+                ids.append(sitelists.get(s)["id"])
+            return ids
 
         else:
             return setting
