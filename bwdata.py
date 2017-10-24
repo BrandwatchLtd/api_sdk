@@ -68,7 +68,9 @@ class BWData:
         next_page = True
         page_idx = 0
 
-        while next_page and page_idx < max_pages:
+        while next_page:
+            if max_pages and page_idx >= max_pages:
+                break
             next_page = self.get_mentions(name, startDate, max_pages=page_idx + 1, page=page_idx, **kwargs)
             if iter_by_page and next_page:
                 yield next_page
@@ -853,7 +855,8 @@ class BWData:
     def _valid_input(self, param, setting):
         if (param in filters.params) and (not isinstance(setting, filters.params[param])):
             return False
-        elif param in filters.special_options and setting not in filters.special_options[param]:
-            return False
+        elif param in filters.special_options:
+            setting = setting if isinstance(setting, list) else [setting]
+            return all(map(lambda x: x in filters.special_options[param], setting))
         else:
             return True
