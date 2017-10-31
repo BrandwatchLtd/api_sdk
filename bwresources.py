@@ -1196,7 +1196,7 @@ class BWRules(BWResource):
 
         for data in data_list:
             if "backfill" in data and data["backfill"] == True:
-                self.project.post(endpoint="rules/" + str(rules[data["name"]]) + "/backfill")
+                self.project.post(endpoint="bulkactions/rule/" + str(rules[data["name"]]))
 
     def rename(self, name, new_name):
         """
