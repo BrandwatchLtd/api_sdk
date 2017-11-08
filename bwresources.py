@@ -579,10 +579,14 @@ class BWGroups(BWResource, bwdata.BWData):
         return {q["name"]: q["id"] for q in self.get(name)["queries"]}
 
     def _name_to_id(self, attribute, setting):
-
         if isinstance(setting, int):
-            # already in ID form
             return setting
+
+        elif isinstance(setting, list):
+            try:
+                return [int(i) for i in setting]
+            except ValueError:
+                pass
 
         elif attribute in ["category", "xcategory"]:
             # setting is a dictionary with one key-value pair, so this loop iterates only once
@@ -1401,10 +1405,14 @@ class BWRules(BWResource):
         return json.dumps(filled)
 
     def _name_to_id(self, attribute, setting):
-        """ internal use """
         if isinstance(setting, int):
-            # already in ID form
             return setting
+
+        elif isinstance(setting, list):
+            try:
+                return [int(i) for i in setting]
+            except ValueError:
+                pass
 
         elif attribute in ["category", "xcategory"]:
             # setting is a dictionary with one key-value pair, so this loop iterates only once
