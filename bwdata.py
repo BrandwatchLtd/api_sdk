@@ -56,14 +56,14 @@ class BWData:
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
-    def iter_mentions(self, name=None, startDate=None,  max_pages=None, iter_by_page=False, **kwargs):
+    def iter_mentions(self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs):
         """
         Same as get_mentions function, but returns an iterator. Fetch one page at a time to reduce memory footprint.
 
         Args:
             name:          You must pass in a query / group name (string).
             startDate:     You must pass in a start date (string).
-            max_pages:  Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
+            max_pages:     Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
             iter_by_page:  Enumerate by page when set to True, else by mention, default to False - Optional.
             kwargs:        All other filters are optional and can be found in filters.py.
 
