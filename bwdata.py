@@ -12,7 +12,7 @@ class BWData:
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access data (e.g. mentions, topics, charts, etc).
     """
-    def get_mentions(self, name=None, startDate=None, max_pages=None, **kwargs):
+    def get_mentions(self, name=None, startDate=None, **kwargs):
         """
         Retrieves a list of mentions.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
@@ -20,7 +20,6 @@ class BWData:
         Args:
             name:       You must pass in a query / group name (string).
             startDate:  You must pass in a start date (string).
-            max_pages:  Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
             kwargs:     All other filters are optional and can be found in filters.py.
 
         Raises:
@@ -31,32 +30,33 @@ class BWData:
         """
         params = self._fill_params(name, startDate, kwargs)
         params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
-        params["page"] = kwargs["page"] if "page" in kwargs else 0
+        next_page = True
+        max_id = 0
+
         all_mentions = []
 
-        while max_pages is None or params["page"] < max_pages:
-            next_mentions = self._get_mentions_page(params, params["page"])
-
-            if len(next_mentions) > 0:
+        while next_page:
+            params['sinceId'] = max_id
+            new_max_id, next_mentions = self._get_mentions_page(params)
+            if len(next_mentions) > 0 and new_max_id > max_id:
+                max_id = new_max_id
                 all_mentions += next_mentions
-                logger.info("Page {} of {} {} retrieved".format(params["page"], self.resource_type, name))
+                logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
+                                                                             self.resource_type, name))
             else:
                 break
-
             params["page"] += 1
 
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
-    def iter_mentions(self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs):
+    def iter_mentions(self, name=None, startDate=None, **kwargs):
         """
         Same as get_mentions function, but returns an iterator. Fetch one page at a time to reduce memory footprint.
 
         Args:
             name:          You must pass in a query / group name (string).
             startDate:     You must pass in a start date (string).
-            max_pages:     Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
-            iter_by_page:  Enumerate by page when set to True, else by mention, default to False - Optional.
             kwargs:        All other filters are optional and can be found in filters.py.
 
         Raises:
@@ -66,18 +66,20 @@ class BWData:
             A list of mentions.
         """
         next_page = True
-        page_idx = 0
+        max_id = 0
+        params = self._fill_params(name, startDate, kwargs)
 
         while next_page:
-            if max_pages and page_idx >= max_pages:
-                break
-            next_page = self.get_mentions(name, startDate, max_pages=page_idx + 1, page=page_idx, **kwargs)
-            if iter_by_page and next_page:
-                yield next_page
-            else:
-                for mention in next_page:
+            params['sinceId'] = max_id
+            new_max_id, next_mentions = self._get_mentions_page(params)
+            if len(next_mentions) > 0 and new_max_id > max_id:
+                max_id = new_max_id
+                logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
+                                                                             self.resource_type, name))
+                for mention in next_mentions:
                     yield mention
-            page_idx += 1
+            else:
+                next_page = False
         return
 
     def num_mentions(self, name=None, startDate=None, **kwargs):
@@ -843,14 +845,15 @@ class BWData:
 
         return filled
 
-    def _get_mentions_page(self, params, page):
-        params["page"] = page
+    def _get_mentions_page(self, params):
+        params['orderBy'] = 'id'
+        params['orderDirection'] = 'asc'
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
 
         if "errors" in mentions:
             raise KeyError("Mentions GET request failed", mentions)
 
-        return mentions["results"]
+        return mentions['maximumIdInResult'], mentions["results"]
 
     def _valid_input(self, param, setting):
         if (param in filters.params) and (not isinstance(setting, filters.params[param])):
