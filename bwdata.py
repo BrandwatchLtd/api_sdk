@@ -51,7 +51,6 @@ class BWData:
                                                                              self.resource_type, name))
             else:
                 break
-            params["page"] += 1
 
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
