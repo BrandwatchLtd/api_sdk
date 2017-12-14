@@ -67,7 +67,7 @@ class BWUser:
             raise KeyError("Could not validate provided token", user)
 
     def _get_auth(self, username, password, token_path, grant_type, client_id):
-        token = requests.get(
+        token = requests.post(
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
