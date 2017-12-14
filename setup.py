@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='bwapi',
 
-    version='2.3.1',
+    version='2.4.0',
 
     description='A software development kit for the Brandwatch API',
 
