@@ -71,9 +71,11 @@ class BWUser:
             self.apiurl + self.oauthpath,
             params={
                 "username": username,
-                "password": password,
                 "grant_type": grant_type,
                 "client_id": client_id
+            },
+            body={
+                "password": password
             }).json()
         if "access_token" in token:
             return username, token["access_token"]
