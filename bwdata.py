@@ -8,18 +8,19 @@ import logging
 logger = logging.getLogger("bwapi")
 
 
-class BWData:
+class BWData(object):
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access data (e.g. mentions, topics, charts, etc).
     """
-    def get_mentions(self, name=None, startDate=None, max_pages=None, **kwargs):
+
+    def get_mentions(self, name=None, start_date=None, max_pages=None, **kwargs):
         """
         Retrieves a list of mentions.
         Note: Clients do not have access to full Twitter mentions through the API because of our data agreement with Twitter.
 
         Args:
             name:       You must pass in a query / group name (string).
-            startDate:  You must pass in a start date (string).
+            start_date:  You must pass in a start date (string).
             max_pages:  Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
             kwargs:     All other filters are optional and can be found in filters.py.
 
@@ -29,8 +30,8 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
+        params = self._fill_params(name, start_date, kwargs)
+        params["pageSize"] = kwargs.get("page_size", 5000)
         next_page = True
         max_id = 0
         page_idx = 0
@@ -48,20 +49,22 @@ class BWData:
                 max_id = new_max_id
                 all_mentions += next_mentions
                 logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
-                                                                             self.resource_type, name))
+                                                                             self.resource_type,
+                                                                             name))
             else:
                 break
 
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
-    def iter_mentions(self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs):
+    def iter_mentions(self, name=None, start_date=None, max_pages=None, iter_by_page=False,
+                      **kwargs):
         """
         Same as get_mentions function, but returns an iterator. Fetch one page at a time to reduce memory footprint.
 
         Args:
             name:          You must pass in a query / group name (string).
-            startDate:     You must pass in a start date (string).
+            start_date:     You must pass in a start date (string).
             max_pages:     Maximum number of pages to retrieve, where each page is 5000 mentions by default - Optional.  If you don't pass max_pages, it will retrieve all mentions that match your request.
             iter_by_page:  Enumerate by page when set to True, else by mention, default to False - Optional.
             kwargs:        All other filters are optional and can be found in filters.py.
@@ -72,8 +75,8 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
+        params = self._fill_params(name, start_date, kwargs)
+        params["pageSize"] = kwargs.get("page_size", 5000)
         next_page = True
         max_id = 0
         page_idx = 0
@@ -88,7 +91,8 @@ class BWData:
             if len(next_mentions) > 0 and new_max_id > max_id:
                 max_id = new_max_id
                 logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
-                                                                             self.resource_type, name))
+                                                                             self.resource_type,
+                                                                             name))
                 if iter_by_page:
                     yield next_mentions
                 else:
@@ -98,32 +102,33 @@ class BWData:
                 break
         return
 
-    def num_mentions(self, name=None, startDate=None, **kwargs):
+    def num_mentions(self, name=None, start_date=None, **kwargs):
         """
         Retrieves a count of the mentions in a given timeframe.
 
         Args:
             name:       You must pass in a query / group name (string).
-            startDate:  You must pass in a start date (string).
+            start_date:  You must pass in a start date (string).
             kwargs:     All other filters are optional and can be found in filters.py.
 
         Returns:
             A count of the mentions in a given timeframe.
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions/count", params=params)['mentionsCount']
 
-    def get_chart(self, name=None, startDate=None, y_axis=None, x_axis=None, breakdown_by=None, **kwargs):
+    def get_chart(self, name=None, start_date=None, y_axis=None, x_axis=None, breakdown_by=None,
+                  **kwargs):
         """
         Retrieves chart data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             y_axis:         Pass in the y axis of your chart (string in camel case). See Brandwatch app dropdown menu "For (Y-Axis)" for options
             x_axis:         Pass in the x axis of your chart (string in camel case). See Brandwatch app dropdown menu "Show (X-Axis)" for options.
             breakdown_by:   Pass in breakdown_by (string in camel case). See Brandwatch app dropdown menu "Breakdown by" for options.
-            kwargs:         You must pass in name (query name/group) and startDate (string).  Additionally, if you x_axis or breakdown_by consists of categories or tags you must pass in dim1Args or dim2Args, respectively, which should be a list of the names of those cats/tags. All other filters are optional and can be found in filters.py.
+            kwargs:         You must pass in name (query name/group) and start_date (string).  Additionally, if you x_axis or breakdown_by consists of categories or tags you must pass in dim1Args or dim2Args, respectively, which should be a list of the names of those cats/tags. All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the specified chart
@@ -135,303 +140,316 @@ class BWData:
         if not (y_axis and x_axis and breakdown_by):
             raise KeyError("You must pass in an y_axis, x_axis and breakdown_by")
 
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         if "dim1Args" in params:
             params["dim1Args"] = self._name_to_id(x_axis, params["dim1Args"])
         if "dim2Args" in params:
             params["dim2Args"] = self._name_to_id(breakdown_by, params["dim2Args"])
 
-        return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
+        endpoint = "data/{y_axis}/{x_axis}/{breakdown_by}".format(
+            y_axis=y_axis,
+            x_axis=x_axis,
+            breakdown_by=breakdown_by
+        )
+        return self.project.get(endpoint=endpoint,
+                                params=params)
 
-    def get_topics(self, name=None, startDate=None, **kwargs):
+    def get_topics(self, name=None, start_date=None, **kwargs):
         """
         Retrieves topics data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics cloud (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
-    def get_topics_comparison(self, name=None, startDate=None, **kwargs):
+    def get_topics_comparison(self, name=None, start_date=None, **kwargs):
         """
         Retrieves topics comparison data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics comparison (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topics/compare/gender", params=params)["topics"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/volume/topics/compare/gender", params=params)[
+            "topics"]
 
-    def get_authors(self, name=None, startDate=None, **kwargs):
+    def get_authors(self, name=None, start_date=None, **kwargs):
         """
         Retrieves author data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the authors including everything that can be seen in the list of authors
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/topauthors/queries", params=params)["results"]
 
-    def get_history(self, name=None, startDate=None, **kwargs):
+    def get_history(self, name=None, start_date=None, **kwargs):
         """
         Retrieves history data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the history component, all the points of time that the timeline covers
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/queries/days", params=params)["results"]
 
-    def get_topsites(self, name=None, startDate=None, **kwargs):
+    def get_topsites(self, name=None, start_date=None, **kwargs):
         """
         Retrieves top sites data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of top sites
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
 
-    def get_tweeters(self, name=None, startDate=None, **kwargs):
+    def get_tweeters(self, name=None, start_date=None, **kwargs):
         """
         Retrieves tweeters data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of top tweeters
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)[
+            "results"]
 
-    def get_volume(self, name=None, startDate=None, **kwargs):
+    def get_volume(self, name=None, start_date=None, **kwargs):
         """
         Retrieves volume data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of volume data
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
 
-    def get_world(self, name=None, startDate=None, **kwargs):
+    def get_world(self, name=None, start_date=None, **kwargs):
         """
         Retrieves world overview (mentions map) data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of mapped mentions on a globe data
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/countries", params=params)["results"]["values"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/volume/queries/countries", params=params)["results"][
+            "values"]
 
-    def get_keyinsights(self, name=None, startDate=None, **kwargs):
+    def get_keyinsights(self, name=None, start_date=None, **kwargs):
         """
         Retrieves key insights component data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the component key insights
         """
-        key_insights = {"total_mentions": self.get_keyinsights_mention_count(name, startDate),
-                        "unique_authors": self.get_keyinsights_author_count(name, startDate),
-                        "topic_trends":   self.get_keyinsights_topics(name, startDate),
-                        "rising_news":    self.get_keyinsights_news(name, startDate),
+        key_insights = {"total_mentions": self.get_keyinsights_mention_count(name, start_date),
+                        "unique_authors": self.get_keyinsights_author_count(name, start_date),
+                        "topic_trends": self.get_keyinsights_topics(name, start_date),
+                        "rising_news": self.get_keyinsights_news(name, start_date),
                         }
         return key_insights
 
-    def get_keyinsights_mention_count(self, name=None, startDate=None, **kwargs):
+    def get_keyinsights_mention_count(self, name=None, start_date=None, **kwargs):
         """
         Retrieves total mentions count data from key insights component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             An integer that represents the total number of mentions
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions/count", params=params)["mentionsCount"]
 
-    def get_keyinsights_author_count(self, name=None, startDate=None, **kwargs):
+    def get_keyinsights_author_count(self, name=None, start_date=None, **kwargs):
         """
         Retrieves total unique authors count data from key insights component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             An integer that represents the total number of unique authors
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/authors/months/queries", params=params)["results"][0]["values"][0]["value"]
+        params = self._fill_params(name, start_date, kwargs)
+        return \
+        self.project.get(endpoint="data/authors/months/queries", params=params)["results"][0][
+            "values"][0]["value"]
 
-    def get_keyinsights_topics(self, name=None, startDate=None, **kwargs):
+    def get_keyinsights_topics(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the top 3 trending topics data from key insights component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the top 3 trending topics
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         params["limit"] = kwargs["limit"] if "limit" in kwargs else 3
         return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
 
-    def get_keyinsights_news(self, name=None, startDate=None, **kwargs):
+    def get_keyinsights_news(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the top 3 rising news data from the key insights component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the rising top 3 rising news urls
         """
-        params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 3
+        params = self._fill_params(name, start_date, kwargs)
+        params["pageSize"] = kwargs.get("page_size", 3)
         return self.project.get(endpoint="data/mentions", params=params)["results"]
 
-    def get_summary(self, name=None, startDate=None, **kwargs):
+    def get_summary(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the summary component data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the summary component analysis
         """
-        summary = {"sentiment": self.get_summary_sentiment(name, startDate),
-                   "topsites":  self.get_summary_topsites(name, startDate),
-                   "pagetypes": self.get_summary_pagetypes(name, startDate)}
+        summary = {"sentiment": self.get_summary_sentiment(name, start_date),
+                   "topsites": self.get_summary_topsites(name, start_date),
+                   "pagetypes": self.get_summary_pagetypes(name, start_date)}
         return summary
 
-    def get_summary_sentiment(self, name=None, startDate=None, **kwargs):
+    def get_summary_sentiment(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the sentiment data from the summary component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the summary sentiment analysis
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/sentiment/days", params=params)["results"]
 
-    def get_summary_topsites(self, name=None, startDate=None, **kwargs):
+    def get_summary_topsites(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the top sites data from the summary component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the summary sites analysis
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
 
-    def get_summary_pagetypes(self, name=None, startDate=None, **kwargs):
+    def get_summary_pagetypes(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the top page type data from the summary component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the summary page type analysis
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
 
-    def get_twitter_insights(self, name=None, startDate=None, **kwargs):
+    def get_twitter_insights(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the twitter insights component data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the twitter insights component data
         """
-        twitter_insights = {"hashtags":         self.get_twitter_insights_feature(name, startDate, "hashtags"),
-                            "emoticons":        self.get_twitter_insights_feature(name, startDate, "emoticons"),
-                            "urls":             self.get_twitter_insights_feature(name, startDate, "urls"),
-                            "mentionedauthors": self.get_twitter_insights_feature(name, startDate, "mentionedauthors"),
-                            }
+        twitter_insights = {
+            "hashtags": self.get_twitter_insights_feature(name, start_date, "hashtags"),
+            "emoticons": self.get_twitter_insights_feature(name, start_date, "emoticons"),
+            "urls": self.get_twitter_insights_feature(name, start_date, "urls"),
+            "mentionedauthors": self.get_twitter_insights_feature(name, start_date,
+                                                                  "mentionedauthors"),
+            }
         return twitter_insights
 
-    def get_twitter_insights_feature(self, name=None, startDate=None, feature=None, **kwargs):
+    def get_twitter_insights_feature(self, name=None, start_date=None, feature=None, **kwargs):
         """
         Retrieves the a feature from the twitter insights component.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             feature:        Pass in a feature of the twitter insights component (written in lowercase within a string). This is either hashtags, emoticons, urls, or mentionedauthors.
             kwargs:         All other filters are optional and can be found in filters.py.
 
@@ -441,31 +459,31 @@ class BWData:
         if not feature:
             raise KeyError("You must pass in a feature")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+feature, params=params)
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/" + feature, params=params)
 
-    def get_volume_group(self, name=None, startDate=None, **kwargs):
+    def get_volume_group(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the volume for group data.
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the volume for group data
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/volume/queries/sentiment", params=params)["results"]
 
-    def get_date_range_comparison(self, name=None, startDate=None, date_ranges=None, **kwargs):
+    def get_date_range_comparison(self, name=None, start_date=None, date_ranges=None, **kwargs):
         """
         Retrieves the date range data
 
         Args:
             name:           You must pass in a query / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             date_ranges:    You must pass in date range(s) ([list] of strings).
             kwargs:         All other filters are optional and can be found in filters.py.
 
@@ -478,43 +496,46 @@ class BWData:
         query_id = self.ids[name]
         date_range_list = self._get_date_ranges(query_id)
         date_range_ids = [dr["id"] for dr in date_range_list if dr["name"] in date_ranges]
-        
+
         if date_range_ids == [] or date_ranges is None:
             raise KeyError("You must pass in a valid list of date range(s)")
 
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         params["dateRanges"] = date_range_ids
         return self.project.get(endpoint="data/volume/dateRanges/days", params=params)["results"]
 
         ## Channels
 
-    def get_fb_analytics(self, name=None, startDate=None, **kwargs):
+    def get_fb_analytics(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the entire facebook analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the entire facebook analytics component data
         """
-        fb_analytics = {"audience":         self.get_fb_analytics_partial(name, startDate, "audience"),
-                        "ownerActivity":    self.get_fb_analytics_partial(name, startDate, "ownerActivity"),
-                        "audienceActivity": self.get_fb_analytics_partial(name, startDate, "audienceActivity"),
-                        "impressions":      self.get_fb_analytics_partial(name, startDate, "impressions"),
+        fb_analytics = {"audience": self.get_fb_analytics_partial(name, start_date, "audience"),
+                        "ownerActivity": self.get_fb_analytics_partial(name, start_date,
+                                                                       "ownerActivity"),
+                        "audienceActivity": self.get_fb_analytics_partial(name, start_date,
+                                                                          "audienceActivity"),
+                        "impressions": self.get_fb_analytics_partial(name, start_date,
+                                                                     "impressions"),
                         }
         return fb_analytics
 
-    def get_fb_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_fb_analytics_partial(self, name=None, start_date=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the facebook analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             metadata_type:  You must pass in the type of facebook analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
 
             kwargs:         All other filters are optional and can be found in filters.py.
@@ -525,81 +546,85 @@ class BWData:
         if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/" + metadata_type + "/queries/days", params=params)[
+            "results"][0]["values"]
 
-    def get_fb_audience(self, name=None, startDate=None, **kwargs):
+    def get_fb_audience(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the facebook audience component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params=params)["results"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params=params)[
+            "results"]
 
-    def get_fb_comments(self, name=None, startDate=None, **kwargs):
+    def get_fb_comments(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the facebook comments component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions/facebookcomments", params=params)["results"]
 
-    def get_fb_posts(self, name=None, startDate=None, **kwargs):
+    def get_fb_posts(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the facebook posts component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions/facebookposts", params=params)["results"]
 
-    def get_ig_interactions(self, name=None, startDate=None, **kwargs):
+    def get_ig_interactions(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the entire instagram interactions component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the entire instagram interactions component data.
         """
-        instagram_interactions ={"ownerActivity": self.get_ig_interactions_partial(name, startDate, "ownerActivity"),
-                                 "audienceActivity": self.get_ig_interactions_partial(name, startDate, "audienceActivity")}
+        instagram_interactions = {
+            "ownerActivity": self.get_ig_interactions_partial(name, start_date, "ownerActivity"),
+            "audienceActivity": self.get_ig_interactions_partial(name, start_date,
+                                                                 "audienceActivity")}
         return instagram_interactions
 
-    def get_ig_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_ig_interactions_partial(self, name=None, start_date=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the instagram interactions component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             metadata_type:  You must pass in the type of instagram interactions data you want (string). This can be either ownerActivity or audienceActivity.
 
             kwargs:         All other filters are optional and can be found in filters.py.
@@ -610,35 +635,37 @@ class BWData:
         if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/" + metadata_type + "/queries/days", params=params)[
+            "results"][0]
 
-    def get_ig_insights(self, name=None, startDate=None, **kwargs):
+    def get_ig_insights(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the entire instagram owner insights component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the entire instagram owner insights component data.
         """
-        instagram_insights ={"mentionedauthors": self.get_ig_insights_partial(name, startDate, "mentionedauthors"),
-                             "hashtags":         self.get_ig_insights_partial(name, startDate, "hashtags"),
-                             "emoticons":        self.get_ig_insights_partial(name, startDate, "emoticons"),
-                             }
+        instagram_insights = {
+            "mentionedauthors": self.get_ig_insights_partial(name, start_date, "mentionedauthors"),
+            "hashtags": self.get_ig_insights_partial(name, start_date, "hashtags"),
+            "emoticons": self.get_ig_insights_partial(name, start_date, "emoticons"),
+            }
         return instagram_insights
 
-    def get_ig_insights_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_ig_insights_partial(self, name=None, start_date=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the instagram owner insights component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             metadata_type:  You must pass in the type of instagram insights data you want (string). This can be either hashtags, mentionedauthors, or emoticons.
 
             kwargs:         All other filters are optional and can be found in filters.py.
@@ -649,16 +676,16 @@ class BWData:
         if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type, params=params)["results"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/" + metadata_type, params=params)["results"]
 
-    def get_ig_posts(self, name=None, startDate=None, **kwargs):
+    def get_ig_posts(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the instagram posts component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
@@ -666,16 +693,16 @@ class BWData:
             A list of instagram authors, each having a dictionary representation of their respective instagram data
         """
 
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions", params=params)["results"]
 
-    def get_ig_followers(self, name=None, startDate=None, **kwargs):
+    def get_ig_followers(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the instagram total followers component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
@@ -683,16 +710,17 @@ class BWData:
             A list with the follower count for each day in the date range, each day having a dictionary representation of their respective instagram follower count data
         """
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/audience/queries/days", params=params)["results"][0]["values"]
-    
-    def get_tweets(self, name=None, startDate=None, **kwargs):
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/audience/queries/days", params=params)["results"][0][
+            "values"]
+
+    def get_tweets(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the twitter tweets component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
@@ -700,36 +728,39 @@ class BWData:
             A list of tweets with author, location, and other metadata, each tweet having a dictionary representation of their respective tweet data
         """
 
-        params = self._fill_params(name, startDate, kwargs)
+        params = self._fill_params(name, start_date, kwargs)
         return self.project.get(endpoint="data/mentions/tweets", params=params)["results"]
-        
-    def get_tw_analytics(self, name=None, startDate=None, **kwargs):
+
+    def get_tw_analytics(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the entire twitter analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the entire twitter analytics component data
         """
-        tw_analytics = {"audience":         self.get_tw_analytics_partial(name, startDate, "audience"),
-                        "ownerActivity":    self.get_tw_analytics_partial(name, startDate, "ownerActivity"),
-                        "audienceActivity": self.get_tw_analytics_partial(name, startDate, "audienceActivity"),
-                        "impressions":      self.get_tw_analytics_partial(name, startDate, "impressions"),
+        tw_analytics = {"audience": self.get_tw_analytics_partial(name, start_date, "audience"),
+                        "ownerActivity": self.get_tw_analytics_partial(name, start_date,
+                                                                       "ownerActivity"),
+                        "audienceActivity": self.get_tw_analytics_partial(name, start_date,
+                                                                          "audienceActivity"),
+                        "impressions": self.get_tw_analytics_partial(name, start_date,
+                                                                     "impressions"),
                         }
         return tw_analytics
 
-    def get_tw_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_tw_analytics_partial(self, name=None, start_date=None, metadata_type=None, **kwargs):
         """
         Retrieves the specified part of the twitter analytics component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             metadata_type:  You must pass in the type of twitter analytics data you want (string). This can be either audience, ownerActivity, audienceActivity, or impressions.
 
             kwargs:         All other filters are optional and can be found in filters.py.
@@ -740,52 +771,54 @@ class BWData:
         if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/" + metadata_type + "/queries/days", params=params)[
+            "results"][0]["values"]
 
-    def get_tw_audience(self, name=None, startDate=None, **kwargs):
+    def get_tw_audience(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the twitter audience component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A list of twitter authors, each having a dictionary representation of their respective twitter data
         """
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)[
+            "results"]
 
-    def get_dem_summary(self, name=None, startDate=None, **kwargs):
+    def get_dem_summary(self, name=None, start_date=None, **kwargs):
         """
         Retrieves the entire demographics summary component data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
 
             kwargs:         All other filters are optional and can be found in filters.py.
 
         Returns:
             A dictionary representation of the entire demographics summary component data
         """
-        dem_summary = {"gender":     self.get_dem_summary_partial(name, startDate, "gender"),
-                       "interest":   self.get_dem_summary_partial(name, startDate, "interest"),
-                       "profession": self.get_dem_summary_partial(name, startDate, "profession"),
-                       "countries":  self.get_dem_summary_partial(name, startDate, "countries"),
+        dem_summary = {"gender": self.get_dem_summary_partial(name, start_date, "gender"),
+                       "interest": self.get_dem_summary_partial(name, start_date, "interest"),
+                       "profession": self.get_dem_summary_partial(name, start_date, "profession"),
+                       "countries": self.get_dem_summary_partial(name, start_date, "countries"),
                        }
         return dem_summary
 
-    def get_dem_summary_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_dem_summary_partial(self, name=None, start_date=None, metadata_type=None, **kwargs):
         """
         Retrieves a specified part of the demographic summary component data extracted from twitter data.
 
         Args:
             name:           You must pass in a channel / group name (string).
-            startDate:      You must pass in a start date (string).
+            start_date:      You must pass in a start date (string).
             metadata_type:  You must pass in the type of demographic summary data you want (string). This can be either gender, interest, profession, or countries.
 
 
@@ -798,8 +831,8 @@ class BWData:
         if not metadata_type:
             raise KeyError("You must pass in a metadata_type")
 
-        params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="demographics/"+metadata_type, params=params)
+        params = self._fill_params(name, start_date, kwargs)
+        return self.project.get(endpoint="demographics/" + metadata_type, params=params)
 
     def _get_date_ranges(self, query_id=None):
         """
@@ -813,9 +846,9 @@ class BWData:
             A dictionary representation of the date ranges available for the specified query
 
         """
-        return self.project.get(endpoint="queries/"+str(query_id)+"/"+"date-range")
+        return self.project.get(endpoint="queries/" + str(query_id) + "/" + "date-range")
 
-    def _fill_params(self, name, startDate, data):
+    def _fill_params(self, name, start_date, data):
         try:
             name = int(name)
         except ValueError:
@@ -827,30 +860,34 @@ class BWData:
         for n in name_list:
             if isinstance(n, str):
                 if n not in self.ids:
-                    logger.error("Could not find {} with name {}".format(self.resource_type, n), self.ids)
+                    logger.error("Could not find {} with name {}".format(self.resource_type, n),
+                                 self.ids)
                 else:
                     id_list.append(self.ids[n])
             elif isinstance(n, int):
                 if n not in self.ids.values():
-                    logger.error("Could not find {} with id {}".format(self.resource_type, n), self.ids)
+                    logger.error("Could not find {} with id {}".format(self.resource_type, n),
+                                 self.ids)
                 else:
                     id_list.append(n)
             else:
-                logger.error("Must reference {} with type string or int".format(self.resource_type), n)
+                logger.error("Must reference {} with type string or int".format(self.resource_type),
+                             n)
 
         if len(id_list) == 0:
-            raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type), name)
+            raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type),
+                               name)
 
-        filled = {}
+        filled = dict()
         filled[self.resource_id_name] = id_list
-        filled["startDate"] = startDate
-        filled["endDate"] = data["endDate"] if "endDate" in data else (
+        filled["startDate"] = start_date
+        filled["endDate"] = data["end_date"] if "end_date" in data else (
             datetime.date.today() + datetime.timedelta(days=1)).isoformat()
 
-        if "orderBy" in data:
-            filled["orderBy"] = data["orderBy"]
-        if "orderDirection" in data:
-            filled["orderDirection"] = data["orderDirection"]
+        if "order_by" in data:
+            filled["orderBy"] = data["order_by"]
+        if "order_direction" in data:
+            filled["orderDirection"] = data["order_direction"]
 
         for param in data:
             setting = self._name_to_id(param, data[param])

@@ -65,8 +65,10 @@ params = {"author": str,
           "averageDurationOfVisitMax": int,
           "tag": list,  # user passes in a string which gets converted to a list of ids
           "xtag": list,  # user passes in a string which gets converted to a list of ids
-          "authorLocationGroup": list,  # user passes in a string which gets converted to a list of ids
-          "xauthorLocationGroup": list,  # user passes in a string which gets converted to a list of ids
+          "authorLocationGroup": list,
+          # user passes in a string which gets converted to a list of ids
+          "xauthorLocationGroup": list,
+          # user passes in a string which gets converted to a list of ids
           "authorLocation": str,
           "xauthorLocation": str,
           "twitterFollowersMin": int,
@@ -94,12 +96,12 @@ params = {"author": str,
           "impressionsMin": int,
           "impressionsMax": int,
           "gender": str,
-          "accountType": (str, list),   # one or more filters
+          "accountType": (str, list),  # one or more filters
           "xaccountType": (str, list),  # one or more filters
-          "profession": (str, list),    # one or more filters
-          "xprofession": (str, list),   # one or more filters
-          "interest": (str, list),      # one or more filters
-          "xinterest": (str, list),     # one or more filters
+          "profession": (str, list),  # one or more filters
+          "xprofession": (str, list),  # one or more filters
+          "interest": (str, list),  # one or more filters
+          "xinterest": (str, list),  # one or more filters
           "geolocated": bool,
           "latitudeMin": int,
           "latitudeMax": int,
@@ -152,25 +154,39 @@ special_options = {"sentiment": ["positive", "negative", "neutral"],
                    "xfacebookSubtype": ["link", "other", "photo", "status", "video"],
                    "resourceType": ["public-facebook-post", "public-facebook-comment"],
                    "xresourceType": ["public-facebook-post", "public-facebook-comment"],
-                   "pageType": ["blog", "forum", "news", "general", "video", "twitter", "review", "image",
+                   "pageType": ["blog", "forum", "news", "general", "video", "twitter", "review",
+                                "image",
                                 "instagram", "facebook"],
-                   "xpageType": ["blog", "forum", "news", "general", "video", "twitter", "review", "image",
+                   "xpageType": ["blog", "forum", "news", "general", "video", "twitter", "review",
+                                 "image",
                                  "instagram", "facebook"],
                    "accountType": ["individual", "organizational"],
                    "xaccountType": ["individual", "organizational"],
-                   "profession": ["Executive", "Student", "Politician", "Artist", "Scientist & Researcher",
-                                  "Journalist", "Software developer & IT", "Legal", "Health practitioner",
-                                  "Sportpersons & Trainer", "Sales/Marketing/PR", "Teacher & Lecturer"],
-                   "xprofession": ["Executive", "Student", "Politician", "Artist", "Scientist & Researcher",
-                                   "Journalist", "Software developer & IT", "Legal", "Health practitioner",
-                                   "Sportpersons & Trainer", "Sales/Marketing/PR", "Teacher & Lecturer"],
-                   "interest": ["Animals & Pets", "Fine arts", "Automotive", "Beauty/Health & Fitness", "Books",
-                                "Business", "Environment", "Family & Parenting", "Fashion", "Movies", "Food & Drinks",
-                                "Games", "Music", "Photo & Video", "Politics", "Science", "Shopping", "Sports",
+                   "profession": ["Executive", "Student", "Politician", "Artist",
+                                  "Scientist & Researcher",
+                                  "Journalist", "Software developer & IT", "Legal",
+                                  "Health practitioner",
+                                  "Sportpersons & Trainer", "Sales/Marketing/PR",
+                                  "Teacher & Lecturer"],
+                   "xprofession": ["Executive", "Student", "Politician", "Artist",
+                                   "Scientist & Researcher",
+                                   "Journalist", "Software developer & IT", "Legal",
+                                   "Health practitioner",
+                                   "Sportpersons & Trainer", "Sales/Marketing/PR",
+                                   "Teacher & Lecturer"],
+                   "interest": ["Animals & Pets", "Fine arts", "Automotive",
+                                "Beauty/Health & Fitness", "Books",
+                                "Business", "Environment", "Family & Parenting", "Fashion",
+                                "Movies", "Food & Drinks",
+                                "Games", "Music", "Photo & Video", "Politics", "Science",
+                                "Shopping", "Sports",
                                 "Technology", "Travel", "TV"],
-                   "xinterest": ["Animals & Pets", "Fine arts", "Automotive", "Beauty/Health & Fitness", "Books",
-                                 "Business", "Environment", "Family & Parenting", "Fashion", "Movies", "Food & Drinks",
-                                 "Games", "Music", "Photo & Video", "Politics", "Science", "Shopping", "Sports",
+                   "xinterest": ["Animals & Pets", "Fine arts", "Automotive",
+                                 "Beauty/Health & Fitness", "Books",
+                                 "Business", "Environment", "Family & Parenting", "Fashion",
+                                 "Movies", "Food & Drinks",
+                                 "Games", "Music", "Photo & Video", "Politics", "Science",
+                                 "Shopping", "Sports",
                                  "Technology", "Travel", "TV"]
                    }
 
