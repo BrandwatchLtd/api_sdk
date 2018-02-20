@@ -3,13 +3,11 @@ bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCat
 """
 
 import json
-import datetime
-import filters
-import requests
-import threading
-import bwdata
 import logging
+import requests
 
+import bwdata
+import filters
 
 logger = logging.getLogger("bwapi")
 
