@@ -278,7 +278,7 @@ class BWQueries(BWResource, bwdata.BWData):
 
             if channel["channel_type"] in ["twitter", "Twitter", "TWITTER"]:
                 userId = self.project.bare_request(verb=requests.get,
-                                                   address_root="http://app.brandwatch.net/",
+                                                   address_root="https://app.brandwatch.com/",
                                                    address_suffix="twitterapi/users/show.json",
                                                    params={"screen_name": channel["handle"]})["id_str"]
 

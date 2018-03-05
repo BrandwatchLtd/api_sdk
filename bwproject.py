@@ -28,7 +28,7 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://newapi.brandwatch.com/"):
+    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://api.brandwatch.com/"):
         """
         Creates a BWUser object.
 
@@ -216,7 +216,7 @@ class BWProject(BWUser):
         project_id:         Brandwatch project id.
         project_address:    Path to append to the Brandwatch API url to make any project level calls.
     """
-    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://newapi.brandwatch.com/"):
+    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://api.brandwatch.com/"):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
 
