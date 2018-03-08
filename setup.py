@@ -3,14 +3,14 @@ from setuptools import setup
 setup(
     name='bwapi',
 
-    version='2.4.0',
+    version='3.0.0',
 
     description='A software development kit for the Brandwatch API',
 
     url='https://github.com/BrandwatchLtd/api_sdk',
 
-    author='Amy Barker, Jamie Lebovics, and Paul Siegel',
-    author_email='amyb@brandwatch.com, paul@brandwatch.com',
+    author='Amy Barker, Jamie Lebovics, Paul Siegel and Jessica Bowden',
+    author_email='amyb@brandwatch.com, paul@brandwatch.com, jess@brandwatch.com',
 
     license='License :: OSI Approved :: MIT License',
 
