@@ -74,7 +74,7 @@ class BWUser:
                 "grant_type": grant_type,
                 "client_id": client_id
             },
-            body={
+            data={
                 "password": password
             }).json()
         if "access_token" in token:
