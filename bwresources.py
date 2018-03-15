@@ -588,20 +588,20 @@ class BWGroups(BWResource, bwdata.BWData):
             except ValueError:
                 pass
 
-        elif attribute in ["category", "xcategory"]:
+        if attribute in ["category", "xcategory"]:
             # setting is a dictionary with one key-value pair, so this loop iterates only once
             # but is necessary to extract the values in the dictionary
             ids = []
             for category in setting:
                 parent = category
                 children = setting[category]
-            for child in children:
-                ids.append(self.categories.ids[parent]["children"][child])
+                for child in children:
+                    ids.append(self.categories.ids[parent]["children"][child])
             return ids
 
         elif attribute in ["parentCategory", "xparentCategory", "parentCategories", "categories"]:
-            #plural included for get_charts syntax
-            #note: parentCategories and categories params will be ignored for everything but chart calls
+            # plural included for get_charts syntax
+            # note: parentCategories and categories params will be ignored for everything but chart calls
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
@@ -610,7 +610,7 @@ class BWGroups(BWResource, bwdata.BWData):
             return ids
 
         elif attribute in ["tag", "xtag", "tags"]:
-            #plural included for get_charts syntax
+            # plural included for get_charts syntax
             if not isinstance(setting, list):
                 setting = [setting]
             ids = []
