@@ -32,7 +32,7 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
         next_page = True
-        max_id = 0
+        max_id = params.get('sinceId', 0)
         page_idx = 0
 
         all_mentions = []
@@ -75,7 +75,7 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
         next_page = True
-        max_id = 0
+        max_id = params.get('sinceId', 0)
         page_idx = 0
 
         while next_page:
