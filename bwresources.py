@@ -1032,7 +1032,7 @@ class BWCategories():
                     if child not in existing_children:
                         new_children.append(child)
 
-                if new_children:
+                if new_children or overwrite_children:
                     if not overwrite_children:
                         # add the new children to the existing children
                         for child in self.ids[name]["children"]:
