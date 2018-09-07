@@ -6,7 +6,7 @@ import os
 import requests
 import time
 import logging
-from json.decoder import JSONDecodeError
+
 
 logger = logging.getLogger("bwapi")
 handler = logging.StreamHandler()
@@ -200,13 +200,10 @@ class BWUser:
                             params=params,
                             data=data,
                             headers={"Content-type": "application/json"})
-        try:
-            if "errors" in response.json() and response.json()["errors"]:
-                logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
-                raise RuntimeError(response.json()["errors"])
-        except JSONDecodeError:
-            logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.text))
-            raise RuntimeError(response.text)
+
+        if "errors" in response.json() and response.json()["errors"]:
+            logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
+            raise RuntimeError(response.json()["errors"])
 
         logger.debug(response.url)
         return response.json()
@@ -270,7 +267,7 @@ class BWProject(BWUser):
                 break
 
         if not project_found:
-            raise KeyError("Project " + str(project) + " not found")
+            raise KeyError("Project " + project + " not found")
 
     def get(self, endpoint, params={}):
         """
