@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/hamishmorgan/api_sdk.svg?branch=master)](https://travis-ci.org/hamishmorgan/api_sdk)
+
 # Brandwatch API SDK
 
 ## Introduction
