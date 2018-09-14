@@ -799,7 +799,7 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="demographics/"+metadata_type, params=params)
+        return self.project.get(endpoint="/data/demographics/"+metadata_type, params=params)
 
     def _get_date_ranges(self, query_id=None):
         """
