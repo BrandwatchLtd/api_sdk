@@ -59,7 +59,7 @@ class BWUser:
         if "username" in user:
             if username is None:
                 return user["username"], token
-            elif user["username"] == username:
+            elif user["username"].lower() == username.lower():
                 return username, token
             else:
                 raise KeyError("Username " + username + " does not match provided token", user)
@@ -84,8 +84,8 @@ class BWUser:
 
     def _read_auth(self, username, token_path):
         user_tokens = self._read_auth_file(token_path)
-        if username in user_tokens:
-            return self._test_auth(username, user_tokens[username])
+        if username.lower() in user_tokens:
+            return self._test_auth(username, user_tokens[username.lower()])
         else:
             raise KeyError("Token not found in file: " + token_path)
 
