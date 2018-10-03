@@ -19,13 +19,15 @@ class CredentialsStore:
 
     _credentials_path: Path
 
-    def __init__(self, credentials_path=DEFAULT_CREDENTIALS_PATH):
+    def __init__(self, credentials_path=None):
         """
         Create a new CredentialsStore
 
         :param credentials_path: Path to the credentials file
         """
-        self._credentials_path = credentials_path
+        if credentials_path is None:
+            credentials_path = DEFAULT_CREDENTIALS_PATH
+        self._credentials_path = Path(credentials_path)
 
     def __getitem__(self, username: str) -> str:
         """ Get self[username] """
