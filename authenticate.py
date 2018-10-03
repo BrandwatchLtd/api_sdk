@@ -11,7 +11,7 @@ from bwproject import BWUser
 import argparse
 
 
-def authenticate(username: str, password: str, credentials_path=None) -> BWUser:
+def authenticate(username, password, credentials_path=None):
     """""
     Authenticate the given username and password pair, storing the access token in the credentials file.
 

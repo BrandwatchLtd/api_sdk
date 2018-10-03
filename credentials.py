@@ -5,7 +5,6 @@ credentials contains the CredentialsStore class, which responsible for persistin
 
 import logging
 from pathlib import Path
-from typing import Mapping
 
 DEFAULT_CREDENTIALS_PATH = Path.home() / '.bwapi' / "credentials.txt"
 
@@ -17,8 +16,6 @@ class CredentialsStore:
     CredentialsStore is responsible for persisting access tokens to disk.
     """
 
-    _credentials_path: Path
-
     def __init__(self, credentials_path=None):
         """
         Create a new CredentialsStore
@@ -29,12 +26,12 @@ class CredentialsStore:
             credentials_path = DEFAULT_CREDENTIALS_PATH
         self._credentials_path = Path(credentials_path)
 
-    def __getitem__(self, username: str) -> str:
+    def __getitem__(self, username):
         """ Get self[username] """
         user_tokens = self._read()
         return user_tokens[username.lower()]
 
-    def __setitem__(self, username: str, token: str):
+    def __setitem__(self, username, token):
         """ Set self[username] to access token. """
         credentials = self._read()
         if username.lower() in credentials:
@@ -63,13 +60,13 @@ class CredentialsStore:
     def __len__(self):
         return len(self._read())
 
-    def _write(self, credentials: Mapping[str, str]):
+    def _write(self, credentials):
         self._ensure_file_exists()
         with open(self._credentials_path, 'w') as token_file:
             contents = "\n".join(["\t".join(item) for item in credentials.items()])
             token_file.write(contents)
 
-    def _read(self) -> Mapping[str, str]:
+    def _read(self):
         self._ensure_file_exists()
         with open(self._credentials_path) as token_file:
             credentials = dict()
