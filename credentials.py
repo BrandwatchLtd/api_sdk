@@ -62,13 +62,13 @@ class CredentialsStore:
 
     def _write(self, credentials):
         self._ensure_file_exists()
-        with open(self._credentials_path, 'w') as token_file:
+        with open(str(self._credentials_path), 'w') as token_file:
             contents = "\n".join(["\t".join(item) for item in credentials.items()])
             token_file.write(contents)
 
     def _read(self):
         self._ensure_file_exists()
-        with open(self._credentials_path) as token_file:
+        with open(str(self._credentials_path)) as token_file:
             credentials = dict()
             for line in token_file:
                 try:
