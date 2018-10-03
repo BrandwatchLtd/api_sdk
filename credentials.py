@@ -4,9 +4,10 @@ credentials contains the CredentialsStore class, which responsible for persistin
 """
 
 import logging
+import os
 from pathlib import Path
 
-DEFAULT_CREDENTIALS_PATH = Path.home() / '.bwapi' / "credentials.txt"
+DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser('~')) / '.bwapi' / "credentials.txt"
 
 logger = logging.getLogger("bwapi")
 
