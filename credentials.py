@@ -41,9 +41,9 @@ class CredentialsStore:
             if credentials[username.lower()] == token:
                 return
             else:
-                logger.debug("Overwriting access token for user: {}", username)
+                logger.info("Overwriting access token for %s in %s", username, self._credentials_path)
         else:
-            logger.debug("Writing access token for user: {}", username)
+            logger.info("Writing access token for user: %s", username)
         credentials[username.lower()] = token
         self._write(credentials)
 
@@ -51,7 +51,7 @@ class CredentialsStore:
         """ Delete self[username]. """
         credentials = self._read()
         if username.lower() in credentials:
-            logger.debug("Deleting access token for user: {}", username)
+            logger.info("Deleting access token for user: %s", username)
             del credentials[username.lower()]
             self._write(credentials)
 
@@ -77,7 +77,7 @@ class CredentialsStore:
                 try:
                     user, token = line.split()
                 except ValueError:
-                    logger.warning("Ignoring corrupted credentials line: \"{}\"", line)
+                    logger.warning("Ignoring corrupted credentials line: \"%s\"", line)
                     pass
                 credentials[user.lower()] = token
             return credentials
@@ -85,10 +85,10 @@ class CredentialsStore:
     def _ensure_file_exists(self):
         self._ensure_dir_exists()
         if not self._credentials_path.exists():
-            logger.debug("Creating credentials store: {}", self._credentials_path)
+            logger.debug("Creating credentials store: %s", self._credentials_path)
             self._credentials_path.touch(mode=0o600)
 
     def _ensure_dir_exists(self):
         if not self._credentials_path.parent.exists():
-            logger.debug("Creating credentials store parent directory: {}", self._credentials_path.parent)
+            logger.debug("Creating credentials store parent directory: %s", self._credentials_path.parent)
             self._credentials_path.parent.mkdir(parents=True, mode=0o755)
