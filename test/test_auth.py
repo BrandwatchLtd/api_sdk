@@ -8,6 +8,10 @@ from bwproject import BWProject
 
 class TestCredentialsStore(unittest.TestCase):
 
+    def test_travis_in_env(self):
+        travis = os.getenv("TRAVIS")
+        self.assertIsNotNone(travis)
+
     def test_username_in_env(self):
         username = os.getenv("BWAPI_USERNAME")
         self.assertIsNotNone(username)
