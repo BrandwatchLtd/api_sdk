@@ -12,7 +12,7 @@ import argparse
 
 
 def authenticate(username, password, credentials_path=None):
-    """""
+    """
     Authenticate the given username and password pair, storing the access token in the credentials file.
 
     :param username: Brandwatch account usernames
