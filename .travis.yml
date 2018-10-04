@@ -28,4 +28,4 @@ before_script:
   - python authenticate.py --username "$BWAPI_USERNAME" --password "$BWAPI_PASSWORD"
 
 script:
-  - python setup.py test
+  - BWAPI_USERNAME=$BWAPI_USERNAME BWAPI_PROJECT=$BWAPI_PROJECT python setup.py test
