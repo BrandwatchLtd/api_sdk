@@ -2,11 +2,11 @@
 bwproject contains the BWUser and BWProject classes
 """
 
-import os
 import requests
 import time
 import logging
 
+from credentials import CredentialsStore
 
 logger = logging.getLogger("bwapi")
 handler = logging.StreamHandler()
@@ -40,17 +40,17 @@ class BWUser:
         """
         self.apiurl = apiurl
         self.oauthpath = "oauth/token"
-
+        self.credentials_store = CredentialsStore(credentials_path=token_path)
         if token:
             self.username, self.token = self._test_auth(username, token)
-            if token_path is not None:
-                self._write_auth(token_path)
+            self.credentials_store[self.username] = self.token
         elif username is not None and password is not None:
             self.username, self.token = self._get_auth(username, password, token_path, grant_type, client_id)
             if token_path is not None:
-                self._write_auth(token_path)
+                self.credentials_store[self.username] = self.token
         elif username is not None:
-            self.username, self.token = self._read_auth(username, token_path)
+            self.username = username
+            self.token = self.credentials_store[username]
         else:
             raise KeyError("Must provide valid token, username and password, or username and path to token file")
 
@@ -81,32 +81,6 @@ class BWUser:
             return username, token["access_token"]
         else:
             raise KeyError("Authentication failed", token)
-
-    def _read_auth(self, username, token_path):
-        user_tokens = self._read_auth_file(token_path)
-        if username.lower() in user_tokens:
-            return self._test_auth(username, user_tokens[username.lower()])
-        else:
-            raise KeyError("Token not found in file: " + token_path)
-
-    def _write_auth(self, token_path):
-        user_tokens = self._read_auth_file(token_path)
-        user_tokens[self.username.lower()] = self.token
-        with open(token_path, "w") as token_file:
-            token_file.write("\n".join(["\t".join(item) for item in user_tokens.items()]))
-
-    def _read_auth_file(self, token_path):
-        user_tokens = {}
-        if os.path.isfile(token_path):
-            with open(token_path) as token_file:
-                for line in token_file:
-                    try:
-                        user, token = line.split()
-                    except ValueError:
-                        pass
-
-                    user_tokens[user.lower()] = token
-        return user_tokens
 
     def get_projects(self):
         """
