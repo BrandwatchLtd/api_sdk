@@ -12,10 +12,6 @@ class TestCredentialsStore(unittest.TestCase):
         for key, val in os.environ.items():
             print(key, val)
 
-    def test_travis_in_env(self):
-        travis = os.getenv("TRAVIS")
-        self.assertIsNotNone(travis)
-
     def test_username_in_env(self):
         username = os.getenv("BWAPI_USERNAME")
         self.assertIsNotNone(username)
@@ -23,6 +19,10 @@ class TestCredentialsStore(unittest.TestCase):
     def test_project_in_env(self):
         project_name = os.getenv("BWAPI_PROJECT")
         self.assertIsNotNone(project_name)
+
+    def test_credentials(self):
+        creds = credentials.CredentialsStore()
+        self.assertGreaterEqual(len(creds), 1)
 
     def test_auth(self):
         username = os.getenv("BWAPI_USERNAME")
