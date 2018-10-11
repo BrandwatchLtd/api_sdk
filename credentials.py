@@ -24,8 +24,10 @@ class CredentialsStore:
         :param credentials_path: Path to the credentials file
         """
         if credentials_path is None:
-            credentials_path = DEFAULT_CREDENTIALS_PATH
-        self._credentials_path = Path(credentials_path)
+            self._credentials_path = DEFAULT_CREDENTIALS_PATH
+        else:
+            self._credentials_path = Path(credentials_path)
+        logger.debug("Initializing credential store to: %s", self._credentials_path)
 
     def __getitem__(self, username):
         """ Get self[username] """
