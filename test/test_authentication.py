@@ -6,11 +6,7 @@ import credentials
 from bwproject import BWProject
 
 
-class TestCredentialsStore(unittest.TestCase):
-
-    def test_dump_env(self):
-        for key, val in os.environ.items():
-            print(key, val)
+class TestAuthentication(unittest.TestCase):
 
     def test_username_in_env(self):
         username = os.getenv("BWAPI_USERNAME")
@@ -23,6 +19,7 @@ class TestCredentialsStore(unittest.TestCase):
     def test_credentials(self):
         creds = credentials.CredentialsStore()
         self.assertGreaterEqual(len(creds), 1)
+        self.assertIsNotNone(creds[os.getenv("BWAPI_USERNAME")])
 
     def test_auth(self):
         username = os.getenv("BWAPI_USERNAME")

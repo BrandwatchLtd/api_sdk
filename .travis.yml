@@ -18,7 +18,7 @@ matrix:
 env:
   global:
   - BWAPI_USERNAME=hamish@brandwatch.com
-  - BWAPI_PROJECT=API SDK Test
+  - BWAPI_PROJECT="API SDK Test"
   - secure: "YXNuk8UDRblj/7tEKkbH6nGR3AXghHzmtumFRkjIq+VXK3yxpsf5tChfPX4q/9c1fQ62Fw5r7wu8cv/k8vsCUi861BL4Yusz8Jdv9C70aPL5ws8ZpoLHQPNxwX/PGoBER9QgeeM+1kM7pWBc8yvFpJfV3vUzVMkH1pV9d4RbWSz16qn6nJYaavU5L+45c9OhK/E019VrNRpNwotZYQRtOb8O1yt2keyM1NcaMbLotTj7KrA5fH98/xowCHVZQGoS4YU7DrQ3ttBXFSKo6tlq2lOeWwMm7gw80UtJ1RXH0BKBjvzx6wgyHRVPhj0nApvV3XkVsGlKfygAvdEXICYZyuhtFihb++/xye8RcuVYVj05vgzr/pc+CF7a8tUxh74hNxGCou7daU+wx31eNjYkUx1rBx+C5NYCHJ53GrAFZYP7fxrED8xft/2gnWSYSwtQ6EzoQeZk+oSIMgLXDyDxyajga+BbxHWXCKY8l3vigqsEHVhe/wEhFvsKzXl/Cyg/tY6SI9fsAWBGHVYKmrb7IPC3AsG74TgZFtoiqRL1Zx95dTXjJh85twG/rK+Ue5U9Z4wdGXfnktqTtxlu/9P+HfFSewH+AaDKA7fvLPa2skutwukg0vo3Ls/3Qb7a4LJ/2LfWyYkZ60aPOQ7KbiL0YHn4t25HYo7dTJeDWGCvSuc="
 
 install:
