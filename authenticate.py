@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-
+import sys
 from getpass import getpass
 import logging
 from pathlib import Path
@@ -51,12 +51,21 @@ def main():
         if args.password is None:
             args.password = getpass("Password: ")
 
+    if not args.username:
+        print("Username is empty!", file=sys.stderr)
+        sys.exit(-1)
+
+    if not args.password:
+        print("Password is empty!", file=sys.stderr)
+        sys.exit(-1)
+
     try:
         print("Authenticating user: {}".format(args.username))
         user = authenticate(args.username, args.password, credentials_path=args.store)
         print("Success! Access token: {}".format(user.token))
     except KeyError as e:
         print(e)
+        sys.exit(-1)
 
 
 if __name__ == "__main__":
