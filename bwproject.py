@@ -57,7 +57,7 @@ class BWUser:
     def _test_auth(self, username, token):
 
         headers = {}
-        headers["Authorization"]=f"Bearer {token}"
+        headers["Authorization"]="Bearer {}".format(token)
         user = requests.get(self.apiurl + "me", headers=headers).json()
 
         if "username" in user:
@@ -172,7 +172,7 @@ class BWUser:
         headers = {}
 
         if access_token:
-            headers["Authorization"] = f"Bearer {access_token}"
+            headers["Authorization"]="Bearer {}".format(access_token)
         if data == {}:
             response = verb(address_root + address_suffix, params=params, headers=headers)
         else:
