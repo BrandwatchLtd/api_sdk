@@ -57,7 +57,7 @@ class BWUser:
     def _test_auth(self, username, token):
 
         headers = {}
-        headers["Authorization"]="Bearer {}".format(token)
+        headers["Authorization"] = "Bearer {}".format(token)
         user = requests.get(self.apiurl + "me", headers=headers).json()
 
         if "username" in user:
@@ -172,15 +172,15 @@ class BWUser:
         headers = {}
 
         if access_token:
-            headers["Authorization"]="Bearer {}".format(access_token)
+            headers["Authorization"] = "Bearer {}".format(access_token)
         if data == {}:
             response = verb(address_root + address_suffix, params=params, headers=headers)
         else:
             headers["Content-type"] = "application/json"
             response = verb(address_root + address_suffix,
-                            params=params,
-                            data=data,
-                            headers=headers)
+                            params = params,
+                            data = data,
+                            headers = headers)
 
         if "errors" in response.json() and response.json()["errors"]:
             logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
