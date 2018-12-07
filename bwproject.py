@@ -55,7 +55,11 @@ class BWUser:
             raise KeyError("Must provide valid token, username and password, or username and path to token file")
 
     def _test_auth(self, username, token):
-        user = requests.get(self.apiurl + "me", params={"access_token": token}).json()
+
+        headers = {}
+        headers["Authorization"] = "Bearer {}".format(token)
+        user = requests.get(self.apiurl + "me", headers=headers).json()
+
         if "username" in user:
             if username is None:
                 return user["username"], token
@@ -164,16 +168,19 @@ class BWUser:
             The response json
         """
         time.sleep(.5)
-        if access_token:
-            params["access_token"] = access_token
 
+        headers = {}
+
+        if access_token:
+            headers["Authorization"] = "Bearer {}".format(access_token)
         if data == {}:
-            response = verb(address_root + address_suffix, params=params)
+            response = verb(address_root + address_suffix, params=params, headers=headers)
         else:
+            headers["Content-type"] = "application/json"
             response = verb(address_root + address_suffix,
-                            params=params,
-                            data=data,
-                            headers={"Content-type": "application/json"})
+                            params = params,
+                            data = data,
+                            headers = headers)
 
         if "errors" in response.json() and response.json()["errors"]:
             logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
