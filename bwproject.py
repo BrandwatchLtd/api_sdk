@@ -178,13 +178,23 @@ class BWUser:
         else:
             headers["Content-type"] = "application/json"
             response = verb(address_root + address_suffix,
-                            params = params,
-                            data = data,
-                            headers = headers)
+                            params=params,
+                            data=data,
+                            headers=headers)
 
-        if "errors" in response.json() and response.json()["errors"]:
-            logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
-            raise RuntimeError(response.json()["errors"])
+        try:
+            response.json()
+        except ValueError as e:
+            # handles non-json responses (e.g. HTTP 404, 500, 502, 503, 504)
+            if 'Expecting value: line 1 column 1 (char 0)' in str(e):
+                logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.text))
+                raise RuntimeError(response.text)
+            else:
+                raise
+        else:
+            if "errors" in response.json() and response.json()["errors"]:
+                logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
+                raise RuntimeError(response.json()["errors"])
 
         logger.debug(response.url)
         return response.json()
