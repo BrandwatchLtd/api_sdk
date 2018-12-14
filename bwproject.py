@@ -258,7 +258,7 @@ class BWProject(BWUser):
                 break
 
         if not project_found:
-            raise KeyError("Project " + project + " not found")
+            raise KeyError("Project " + str(project) + " not found")
 
     def get(self, endpoint, params={}):
         """
