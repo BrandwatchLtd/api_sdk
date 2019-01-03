@@ -31,6 +31,8 @@ setup(
 
     py_modules=['bwproject', 'bwresources', 'bwdata', 'filters'],
 
+    scripts=['authenticate.py'],
+
     install_requires=['requests'],
 
     tests_require=['responses']
