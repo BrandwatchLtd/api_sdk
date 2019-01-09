@@ -19,7 +19,9 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'
     ],
-    py_modules=['bwproject', 'bwresources', 'bwdata', 'filters'],
+    py_modules=[
+        'bwproject', 'bwresources', 'bwdata', 'credentials', 'filters'
+    ],
     scripts=['authenticate.py'],
     install_requires=['requests'],
     tests_require=['responses'])
