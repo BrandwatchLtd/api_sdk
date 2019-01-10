@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 
-DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser('~')) / '.bwapi' / "credentials.txt"
+DEFAULT_CREDENTIALS_PATH = Path(os.path.expanduser("~")) / ".bwapi" / "credentials.txt"
 
 logger = logging.getLogger("bwapi")
 
@@ -39,7 +39,11 @@ class CredentialsStore:
             if credentials[username.lower()] == token:
                 return
             else:
-                logger.info("Overwriting access token for %s in %s", username, self._credentials_path)
+                logger.info(
+                    "Overwriting access token for %s in %s",
+                    username,
+                    self._credentials_path,
+                )
         else:
             logger.info("Writing access token for user: %s", username)
         credentials[username.lower()] = token
@@ -63,7 +67,7 @@ class CredentialsStore:
 
     def _write(self, credentials):
         self._ensure_file_exists()
-        with open(str(self._credentials_path), 'w') as token_file:
+        with open(str(self._credentials_path), "w") as token_file:
             contents = "\n".join(["\t".join(item) for item in credentials.items()])
             token_file.write(contents)
 
@@ -75,7 +79,7 @@ class CredentialsStore:
                 try:
                     user, token = line.split()
                 except ValueError:
-                    logger.warning("Ignoring corrupted credentials line: \"%s\"", line)
+                    logger.warning('Ignoring corrupted credentials line: "%s"', line)
                     pass
                 credentials[user.lower()] = token
             return credentials
@@ -88,5 +92,8 @@ class CredentialsStore:
 
     def _ensure_dir_exists(self):
         if not self._credentials_path.parent.exists():
-            logger.debug("Creating credentials store parent directory: %s", self._credentials_path.parent)
+            logger.debug(
+                "Creating credentials store parent directory: %s",
+                self._credentials_path.parent,
+            )
             self._credentials_path.parent.mkdir(parents=True, mode=0o755)

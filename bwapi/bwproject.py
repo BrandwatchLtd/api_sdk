@@ -6,7 +6,7 @@ import requests
 import time
 import logging
 
-from credentials import CredentialsStore
+from .credentials import CredentialsStore
 
 logger = logging.getLogger("bwapi")
 handler = logging.StreamHandler()
@@ -28,7 +28,17 @@ class BWUser:
         password:   Brandwatch password.
         token:      Access token.
     """
-    def __init__(self, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://api.brandwatch.com/"):
+
+    def __init__(
+        self,
+        token=None,
+        token_path="tokens.txt",
+        username=None,
+        password=None,
+        grant_type="api-password",
+        client_id="brandwatch-api-client",
+        apiurl="https://api.brandwatch.com/",
+    ):
         """
         Creates a BWUser object.
 
@@ -45,14 +55,18 @@ class BWUser:
             self.username, self.token = self._test_auth(username, token)
             self.credentials_store[self.username] = self.token
         elif username is not None and password is not None:
-            self.username, self.token = self._get_auth(username, password, token_path, grant_type, client_id)
+            self.username, self.token = self._get_auth(
+                username, password, token_path, grant_type, client_id
+            )
             if token_path is not None:
                 self.credentials_store[self.username] = self.token
         elif username is not None:
             self.username = username
             self.token = self.credentials_store[username]
         else:
-            raise KeyError("Must provide valid token, username and password, or username and path to token file")
+            raise KeyError(
+                "Must provide valid token, username and password, or username and path to token file"
+            )
 
     def _test_auth(self, username, token):
 
@@ -66,7 +80,9 @@ class BWUser:
             elif user["username"].lower() == username.lower():
                 return username, token
             else:
-                raise KeyError("Username " + username + " does not match provided token", user)
+                raise KeyError(
+                    "Username " + username + " does not match provided token", user
+                )
         else:
             raise KeyError("Could not validate provided token", user)
 
@@ -76,11 +92,10 @@ class BWUser:
             params={
                 "username": username,
                 "grant_type": grant_type,
-                "client_id": client_id
+                "client_id": client_id,
             },
-            data={
-                "password": password
-            }).json()
+            data={"password": password},
+        ).json()
         if "access_token" in token:
             return username, token["access_token"]
         else:
@@ -116,7 +131,9 @@ class BWUser:
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
-        valid_search = self.request(verb=requests.get, address="query-validation", params=kwargs)
+        valid_search = self.request(
+            verb=requests.get, address="query-validation", params=kwargs
+        )
 
     def validate_rule_search(self, **kwargs):
         """
@@ -134,7 +151,9 @@ class BWUser:
         if "language" not in kwargs:
             kwargs["language"] = ["en"]
 
-        valid_search = self.request(verb=requests.get, address="query-validation/searchwithin", params=kwargs)
+        valid_search = self.request(
+            verb=requests.get, address="query-validation/searchwithin", params=kwargs
+        )
 
     def request(self, verb, address, params={}, data={}):
         """
@@ -149,10 +168,18 @@ class BWUser:
         Returns:
             The response json
         """
-        return self.bare_request(verb=verb, address_root=self.apiurl, address_suffix=address, access_token=self.token,
-                                 params=params, data=data)
+        return self.bare_request(
+            verb=verb,
+            address_root=self.apiurl,
+            address_suffix=address,
+            access_token=self.token,
+            params=params,
+            data=data,
+        )
 
-    def bare_request(self, verb, address_root, address_suffix, access_token="", params={}, data={}):
+    def bare_request(
+        self, verb, address_root, address_suffix, access_token="", params={}, data={}
+    ):
         """
         Makes a request to the Brandwatch API.
 
@@ -167,33 +194,42 @@ class BWUser:
         Returns:
             The response json
         """
-        time.sleep(.5)
+        time.sleep(0.5)
 
         headers = {}
 
         if access_token:
             headers["Authorization"] = "Bearer {}".format(access_token)
         if data == {}:
-            response = verb(address_root + address_suffix, params=params, headers=headers)
+            response = verb(
+                address_root + address_suffix, params=params, headers=headers
+            )
         else:
             headers["Content-type"] = "application/json"
-            response = verb(address_root + address_suffix,
-                            params=params,
-                            data=data,
-                            headers=headers)
+            response = verb(
+                address_root + address_suffix, params=params, data=data, headers=headers
+            )
 
         try:
             response.json()
         except ValueError as e:
             # handles non-json responses (e.g. HTTP 404, 500, 502, 503, 504)
-            if 'Expecting value: line 1 column 1 (char 0)' in str(e):
-                logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.text))
+            if "Expecting value: line 1 column 1 (char 0)" in str(e):
+                logger.error(
+                    "There was an error with this request: \n{}\n{}\n{}".format(
+                        response.url, data, response.text
+                    )
+                )
                 raise RuntimeError(response.text)
             else:
                 raise
         else:
             if "errors" in response.json() and response.json()["errors"]:
-                logger.error("There was an error with this request: \n{}\n{}\n{}".format(response.url, data, response.json()["errors"]))
+                logger.error(
+                    "There was an error with this request: \n{}\n{}\n{}".format(
+                        response.url, data, response.json()["errors"]
+                    )
+                )
                 raise RuntimeError(response.json()["errors"])
 
         logger.debug(response.url)
@@ -209,7 +245,18 @@ class BWProject(BWUser):
         project_id:         Brandwatch project id.
         project_address:    Path to append to the Brandwatch API url to make any project level calls.
     """
-    def __init__(self, project, token=None, token_path="tokens.txt", username=None, password=None, grant_type="api-password", client_id="brandwatch-api-client", apiurl="https://api.brandwatch.com/"):
+
+    def __init__(
+        self,
+        project,
+        token=None,
+        token_path="tokens.txt",
+        username=None,
+        password=None,
+        grant_type="api-password",
+        client_id="brandwatch-api-client",
+        apiurl="https://api.brandwatch.com/",
+    ):
         """
         Creates a BWProject object - inheriting directly from the BWUser class.
 
@@ -220,7 +267,15 @@ class BWProject(BWUser):
             token:          Access token - Optional.
             token_path:     File path to the file where access tokens will be read from and written to - Optional.
         """
-        super().__init__(token=token, token_path=token_path, username=username, password=password, grant_type=grant_type, client_id=client_id, apiurl=apiurl)
+        super().__init__(
+            token=token,
+            token_path=token_path,
+            username=username,
+            password=password,
+            grant_type=grant_type,
+            client_id=client_id,
+            apiurl=apiurl,
+        )
         self.project_name = ""
         self.project_id = -1
         self.project_address = ""
@@ -271,7 +326,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb=requests.get, address=self.project_address + endpoint, params=params)
+        return self.request(
+            verb=requests.get, address=self.project_address + endpoint, params=params
+        )
 
     def delete(self, endpoint, params={}):
         """
@@ -284,7 +341,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb=requests.delete, address=self.project_address + endpoint, params=params)
+        return self.request(
+            verb=requests.delete, address=self.project_address + endpoint, params=params
+        )
 
     def post(self, endpoint, params={}, data={}):
         """
@@ -298,7 +357,12 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb=requests.post, address=self.project_address + endpoint, params=params, data=data)
+        return self.request(
+            verb=requests.post,
+            address=self.project_address + endpoint,
+            params=params,
+            data=data,
+        )
 
     def put(self, endpoint, params={}, data={}):
         """
@@ -312,7 +376,12 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb=requests.put, address=self.project_address + endpoint, params=params, data=data)
+        return self.request(
+            verb=requests.put,
+            address=self.project_address + endpoint,
+            params=params,
+            data=data,
+        )
 
     def patch(self, endpoint, params={}, data={}):
         """
@@ -326,4 +395,9 @@ class BWProject(BWUser):
         Returns:
             Server's response to the HTTP request.
         """
-        return self.request(verb=requests.patch, address=self.project_address + endpoint, params=params, data=data)
+        return self.request(
+            verb=requests.patch,
+            address=self.project_address + endpoint,
+            params=params,
+            data=data,
+        )

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
 # coding=utf-8
 
 from getpass import getpass
 import logging
 from pathlib import Path
 
-import credentials
-from bwproject import BWUser
+from . import credentials
+from .bwproject import BWUser
 
 import argparse
 
@@ -33,13 +32,24 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Logging to Brandwatch and retrieve and access token.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--store", "-s", type=Path, metavar="PATH", default=credentials.DEFAULT_CREDENTIALS_PATH,
-                        help="Path to where access tokens are stored.")
+    parser.add_argument(
+        "--store",
+        "-s",
+        type=Path,
+        metavar="PATH",
+        default=credentials.DEFAULT_CREDENTIALS_PATH,
+        help="Path to where access tokens are stored.",
+    )
 
-    parser.add_argument("--username", "-u", type=str, help="Brandwatch username (probably your email address).")
+    parser.add_argument(
+        "--username",
+        "-u",
+        type=str,
+        help="Brandwatch username (probably your email address).",
+    )
     parser.add_argument("--password", "-p", type=str, help="Brandwatch password.")
 
     args = parser.parse_args()
