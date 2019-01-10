@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+bwapi = {editable = true,path = "."}
+flake8 = "*"
+pylint = "*"
+twine = "*"
+pytest = "*"
+responses = "*"
+bumpversion = "*"
+coverage = "*"
+pydocstyle = "*"
+better-exceptions = "*"
+jupyterlab = "*"
+black = "==18.9b0"
+
+[packages]
+bwapi = {editable = true,path = "."}
