@@ -16,7 +16,7 @@ matrix:
       sudo: true
 
 install:
-  - pip install --upgrade setuptools, wheel
+  - pip install --upgrade setuptools wheel
   - python setup.py install
 
 script:
