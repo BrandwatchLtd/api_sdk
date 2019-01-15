@@ -28,39 +28,38 @@ clean-test:
 
 ## check style with flake8, black
 lint: clean
-	black . --check
-	flake8 bwapi tests --exit-zero
+	pipenv run black . --check
+	pipenv run flake8 bwapi tests --exit-zero
 
 ## run tests with the default Python
 test:
-	pytest
+	pipenv run pytest
 
 ## check code coverage quickly with the default Python
 coverage:
-	coverage run --source bwapi -m pytest
-	coverage report -m
-	coverage html
-	open -a "Google Chrome" htmlcov/index.html
+	pipenv run coverage run --source bwapi -m pytest
+	pipenv run coverage report -m
+	pipenv run coverage html
 
 ## upload wheel
 upload: dist
-	twine upload -r pypi dist/bwapi*
+	pipenv run twine upload -r pypi dist/bwapi*
 
 ## increment the patch version, and tag in git
 bumpversion-patch: clean
-	bumpversion --verbose --dry-run patch
+	pipenv run bumpversion --verbose patch
 
 ## increment the minor version, and tag in git
 bumpversion-minor: clean
-	bumpversion --verbose --dry-run minor
+	pipenv run bumpversion --verbose minor
 
 ## increment the major version, and tag in git
 bumpversion-major: clean
-	bumpversion --verbose --dry-run major
+	bumpversion --verbose major
 
 ## builds source and wheel package
 dist: clean
-	python setup.py sdist bdist_wheel
+	pipenv run python setup.py sdist bdist_wheel
 
 ## install the package to the pipenv virtualenv
 install: clean

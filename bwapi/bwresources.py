@@ -328,20 +328,6 @@ class BWQueries(BWResource, bwdata.BWData):
                     "We cannot support automated Facebook channel uploads at this time."
                 )
 
-            # IN PROGRESS
-            # params = {"facebookConsumerKey": "",
-            #       "facebookPageName": ""}
-
-            # data = json.dumps({"facebookPageId": "",
-            #               "facebookPageName": "",
-            #               "facebookPageURL": "https://www.facebook.com/"+channel["name"]+"/",
-            #               "industry": "general-(recommended)",
-            #               "name": channel["name"],
-            #               "type": "publicfacebook"})
-
-            # response = self.project.post(endpoint = "facebookqueries",
-            #                           data = data,
-            #                           params = params)
             else:
                 raise KeyError(
                     "You must specify if the channel_type is twitter or facebook."
