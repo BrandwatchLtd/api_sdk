@@ -16,10 +16,9 @@ matrix:
       sudo: true
 
 install:
-  - pip install --upgrade setuptools wheel black
+  - pip install --upgrade setuptools wheel
   - python setup.py install
 
 script:
-  - black --check bwapi test
   - python setup.py test
 
