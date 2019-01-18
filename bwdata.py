@@ -29,29 +29,7 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
-        next_page = True
-        max_id = params.get('sinceId', 0)
-        page_idx = 0
-
-        all_mentions = []
-
-        while next_page:
-            params['sinceId'] = max_id
-            if max_pages and page_idx >= max_pages:
-                break
-            else:
-                page_idx += 1
-            new_max_id, next_mentions = self._get_mentions_page(params)
-            if len(next_mentions) > 0 and new_max_id > max_id:
-                max_id = new_max_id
-                all_mentions += next_mentions
-                logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
-                                                                             self.resource_type, name))
-            else:
-                break
-
+        all_mentions = self.iter_mentions(name=name, startDate=startDate, max_pages=max_pages, **kwargs)
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
