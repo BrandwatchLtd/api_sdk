@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bwapi',
-    version='3.4.0',
+    version='3.5.0',
     description='A software development kit for the Brandwatch API',
     url='https://github.com/BrandwatchLtd/api_sdk',
     author='Amy Barker, Jamie Lebovics, Paul Siegel and Jessica Bowden',
