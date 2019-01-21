@@ -29,29 +29,9 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
-        next_page = True
-        max_id = params.get('sinceId', 0)
-        page_idx = 0
-
-        all_mentions = []
-
-        while next_page:
-            params['sinceId'] = max_id
-            if max_pages and page_idx >= max_pages:
-                break
-            else:
-                page_idx += 1
-            new_max_id, next_mentions = self._get_mentions_page(params)
-            if len(next_mentions) > 0 and new_max_id > max_id:
-                max_id = new_max_id
-                all_mentions += next_mentions
-                logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
-                                                                             self.resource_type, name))
-            else:
-                break
-
+        kwargs = {key:value for (key,value) in kwargs.items() if key != 'iter_by_page'}
+        all_mentions = list(self.iter_mentions(name=name, startDate=startDate, max_pages=max_pages,
+                                               iter_by_page=False, **kwargs))
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
@@ -73,30 +53,30 @@ class BWData:
             A list of mentions.
         """
         params = self._fill_params(name, startDate, kwargs)
-        params["pageSize"] = kwargs["pageSize"] if "pageSize" in kwargs else 5000
-        next_page = True
-        max_id = params.get('sinceId', 0)
+        page_size = kwargs["pageSize"] if "pageSize" in kwargs else 5000
+        params["pageSize"] = page_size
+        cursor = params.get('cursor', None)
         page_idx = 0
 
-        while next_page:
-            params['sinceId'] = max_id
+        while True:
+            if cursor:
+                params['cursor'] = cursor
             if max_pages and page_idx >= max_pages:
                 break
             else:
                 page_idx += 1
-            new_max_id, next_mentions = self._get_mentions_page(params)
-            if len(next_mentions) > 0 and new_max_id > max_id:
-                max_id = new_max_id
-                logger.info("Mentions since id {} of {} {} retrieved".format(params["sinceId"],
-                                                                             self.resource_type, name))
+            next_cursor, next_mentions = self._get_mentions_page(params)
+            if len(next_mentions) > 0:
+                cursor = next_cursor
+                logger.info("Mentions page {} of {} {} retrieved".format(page_idx,
+                                                                         self.resource_type, name))
                 if iter_by_page:
                     yield next_mentions
                 else:
                     for mention in next_mentions:
                         yield mention
-            else:
+            if len(next_mentions) < page_size or not next_cursor:
                 break
-        return
 
     def num_mentions(self, name=None, startDate=None, **kwargs):
         """
@@ -862,14 +842,11 @@ class BWData:
         return filled
 
     def _get_mentions_page(self, params):
-        params['orderBy'] = 'id'
-        params['orderDirection'] = 'asc'
         mentions = self.project.get(endpoint="data/mentions/fulltext", params=params)
-
         if "errors" in mentions:
             raise KeyError("Mentions GET request failed", mentions)
 
-        return mentions['maximumIdInResult'], mentions["results"]
+        return mentions.get('nextCursor', None), mentions["results"]
 
     def _valid_input(self, param, setting):
         if (param in filters.params) and (not isinstance(setting, filters.params[param])):
