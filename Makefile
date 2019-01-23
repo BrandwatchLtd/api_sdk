@@ -55,7 +55,7 @@ bumpversion-minor: clean
 
 ## increment the major version, and tag in git
 bumpversion-major: clean
-	bumpversion --verbose major
+	pipenv run bumpversion --verbose major
 
 ## builds source and wheel package
 dist: clean
