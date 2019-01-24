@@ -2,7 +2,7 @@
 bwdata contains the BWData class.
 """
 import datetime
-import filters
+from . import filters
 import logging
 
 logger = logging.getLogger("bwapi")
@@ -12,6 +12,7 @@ class BWData:
     """
     This class is a superclass for brandwatch BWQueries and BWGroups.  It was built to handle resources that access data (e.g. mentions, topics, charts, etc).
     """
+
     def get_mentions(self, name=None, startDate=None, max_pages=None, **kwargs):
         """
         Retrieves a list of mentions.
@@ -29,13 +30,24 @@ class BWData:
         Returns:
             A list of mentions.
         """
-        kwargs = {key:value for (key,value) in kwargs.items() if key != 'iter_by_page'}
-        all_mentions = list(self.iter_mentions(name=name, startDate=startDate, max_pages=max_pages,
-                                               iter_by_page=False, **kwargs))
+        kwargs = {
+            key: value for (key, value) in kwargs.items() if key != "iter_by_page"
+        }
+        all_mentions = list(
+            self.iter_mentions(
+                name=name,
+                startDate=startDate,
+                max_pages=max_pages,
+                iter_by_page=False,
+                **kwargs
+            )
+        )
         logger.info("{} mentions downloaded".format(len(all_mentions)))
         return all_mentions
 
-    def iter_mentions(self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs):
+    def iter_mentions(
+        self, name=None, startDate=None, max_pages=None, iter_by_page=False, **kwargs
+    ):
         """
         Same as get_mentions function, but returns an iterator. Fetch one page at a time to reduce memory footprint.
 
@@ -55,12 +67,12 @@ class BWData:
         params = self._fill_params(name, startDate, kwargs)
         page_size = kwargs["pageSize"] if "pageSize" in kwargs else 5000
         params["pageSize"] = page_size
-        cursor = params.get('cursor', None)
+        cursor = params.get("cursor", None)
         page_idx = 0
 
         while True:
             if cursor:
-                params['cursor'] = cursor
+                params["cursor"] = cursor
             if max_pages and page_idx >= max_pages:
                 break
             else:
@@ -68,8 +80,11 @@ class BWData:
             next_cursor, next_mentions = self._get_mentions_page(params)
             if len(next_mentions) > 0:
                 cursor = next_cursor
-                logger.info("Mentions page {} of {} {} retrieved".format(page_idx,
-                                                                         self.resource_type, name))
+                logger.info(
+                    "Mentions page {} of {} {} retrieved".format(
+                        page_idx, self.resource_type, name
+                    )
+                )
                 if iter_by_page:
                     yield next_mentions
                 else:
@@ -91,9 +106,19 @@ class BWData:
             A count of the mentions in a given timeframe.
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/count", params=params)['mentionsCount']
+        return self.project.get(endpoint="data/mentions/count", params=params)[
+            "mentionsCount"
+        ]
 
-    def get_chart(self, name=None, startDate=None, y_axis=None, x_axis=None, breakdown_by=None, **kwargs):
+    def get_chart(
+        self,
+        name=None,
+        startDate=None,
+        y_axis=None,
+        x_axis=None,
+        breakdown_by=None,
+        **kwargs
+    ):
         """
         Retrieves chart data.
 
@@ -121,7 +146,9 @@ class BWData:
         if "dim2Args" in params:
             params["dim2Args"] = self._name_to_id(breakdown_by, params["dim2Args"])
 
-        return self.project.get(endpoint="data/"+y_axis+"/"+x_axis+"/"+breakdown_by, params=params)
+        return self.project.get(
+            endpoint="data/" + y_axis + "/" + x_axis + "/" + breakdown_by, params=params
+        )
 
     def get_topics(self, name=None, startDate=None, **kwargs):
         """
@@ -136,7 +163,9 @@ class BWData:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics cloud (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)[
+            "topics"
+        ]
 
     def get_topics_comparison(self, name=None, startDate=None, **kwargs):
         """
@@ -151,7 +180,9 @@ class BWData:
             A dictionary representation of the topics including everything that can be seen in the chart view of the topics comparison (e.g. the topic, the number of mentions including that topic, the number of mentions by sentiment, the burst value, etc)
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topics/compare/gender", params=params)["topics"]
+        return self.project.get(
+            endpoint="data/volume/topics/compare/gender", params=params
+        )["topics"]
 
     def get_authors(self, name=None, startDate=None, **kwargs):
         """
@@ -166,7 +197,9 @@ class BWData:
             A dictionary representation of the authors including everything that can be seen in the list of authors
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topauthors/queries", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/topauthors/queries", params=params
+        )["results"]
 
     def get_history(self, name=None, startDate=None, **kwargs):
         """
@@ -181,7 +214,9 @@ class BWData:
             A dictionary representation of the history component, all the points of time that the timeline covers
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/days", params=params)["results"]
+        return self.project.get(endpoint="data/volume/queries/days", params=params)[
+            "results"
+        ]
 
     def get_topsites(self, name=None, startDate=None, **kwargs):
         """
@@ -196,7 +231,9 @@ class BWData:
             A dictionary representation of top sites
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
+        return self.project.get(endpoint="data/volume/topsites/queries", params=params)[
+            "results"
+        ]
 
     def get_tweeters(self, name=None, startDate=None, **kwargs):
         """
@@ -211,7 +248,9 @@ class BWData:
             A dictionary representation of top tweeters
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/toptweeters/queries", params=params
+        )["results"]
 
     def get_volume(self, name=None, startDate=None, **kwargs):
         """
@@ -226,7 +265,9 @@ class BWData:
             A dictionary representation of volume data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/queries/pageTypes", params=params
+        )["results"]
 
     def get_world(self, name=None, startDate=None, **kwargs):
         """
@@ -241,7 +282,9 @@ class BWData:
             A dictionary representation of mapped mentions on a globe data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/countries", params=params)["results"]["values"]
+        return self.project.get(
+            endpoint="data/volume/queries/countries", params=params
+        )["results"]["values"]
 
     def get_keyinsights(self, name=None, startDate=None, **kwargs):
         """
@@ -255,11 +298,12 @@ class BWData:
         Returns:
             A dictionary representation of the component key insights
         """
-        key_insights = {"total_mentions": self.get_keyinsights_mention_count(name, startDate),
-                        "unique_authors": self.get_keyinsights_author_count(name, startDate),
-                        "topic_trends":   self.get_keyinsights_topics(name, startDate),
-                        "rising_news":    self.get_keyinsights_news(name, startDate),
-                        }
+        key_insights = {
+            "total_mentions": self.get_keyinsights_mention_count(name, startDate),
+            "unique_authors": self.get_keyinsights_author_count(name, startDate),
+            "topic_trends": self.get_keyinsights_topics(name, startDate),
+            "rising_news": self.get_keyinsights_news(name, startDate),
+        }
         return key_insights
 
     def get_keyinsights_mention_count(self, name=None, startDate=None, **kwargs):
@@ -275,7 +319,9 @@ class BWData:
             An integer that represents the total number of mentions
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/count", params=params)["mentionsCount"]
+        return self.project.get(endpoint="data/mentions/count", params=params)[
+            "mentionsCount"
+        ]
 
     def get_keyinsights_author_count(self, name=None, startDate=None, **kwargs):
         """
@@ -290,7 +336,9 @@ class BWData:
             An integer that represents the total number of unique authors
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/authors/months/queries", params=params)["results"][0]["values"][0]["value"]
+        return self.project.get(endpoint="data/authors/months/queries", params=params)[
+            "results"
+        ][0]["values"][0]["value"]
 
     def get_keyinsights_topics(self, name=None, startDate=None, **kwargs):
         """
@@ -306,7 +354,9 @@ class BWData:
         """
         params = self._fill_params(name, startDate, kwargs)
         params["limit"] = kwargs["limit"] if "limit" in kwargs else 3
-        return self.project.get(endpoint="data/volume/topics/queries", params=params)["topics"]
+        return self.project.get(endpoint="data/volume/topics/queries", params=params)[
+            "topics"
+        ]
 
     def get_keyinsights_news(self, name=None, startDate=None, **kwargs):
         """
@@ -336,9 +386,11 @@ class BWData:
         Returns:
             A dictionary representation of the summary component analysis
         """
-        summary = {"sentiment": self.get_summary_sentiment(name, startDate),
-                   "topsites":  self.get_summary_topsites(name, startDate),
-                   "pagetypes": self.get_summary_pagetypes(name, startDate)}
+        summary = {
+            "sentiment": self.get_summary_sentiment(name, startDate),
+            "topsites": self.get_summary_topsites(name, startDate),
+            "pagetypes": self.get_summary_pagetypes(name, startDate),
+        }
         return summary
 
     def get_summary_sentiment(self, name=None, startDate=None, **kwargs):
@@ -354,7 +406,9 @@ class BWData:
             A dictionary representation of the summary sentiment analysis
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/sentiment/days", params=params)["results"]
+        return self.project.get(endpoint="data/volume/sentiment/days", params=params)[
+            "results"
+        ]
 
     def get_summary_topsites(self, name=None, startDate=None, **kwargs):
         """
@@ -369,7 +423,9 @@ class BWData:
             A dictionary representation of the summary sites analysis
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topsites/queries", params=params)["results"]
+        return self.project.get(endpoint="data/volume/topsites/queries", params=params)[
+            "results"
+        ]
 
     def get_summary_pagetypes(self, name=None, startDate=None, **kwargs):
         """
@@ -384,7 +440,9 @@ class BWData:
             A dictionary representation of the summary page type analysis
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/pageTypes", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/queries/pageTypes", params=params
+        )["results"]
 
     def get_twitter_insights(self, name=None, startDate=None, **kwargs):
         """
@@ -398,14 +456,21 @@ class BWData:
         Returns:
             A dictionary representation of the twitter insights component data
         """
-        twitter_insights = {"hashtags":         self.get_twitter_insights_feature(name, startDate, "hashtags"),
-                            "emoticons":        self.get_twitter_insights_feature(name, startDate, "emoticons"),
-                            "urls":             self.get_twitter_insights_feature(name, startDate, "urls"),
-                            "mentionedauthors": self.get_twitter_insights_feature(name, startDate, "mentionedauthors"),
-                            }
+        twitter_insights = {
+            "hashtags": self.get_twitter_insights_feature(name, startDate, "hashtags"),
+            "emoticons": self.get_twitter_insights_feature(
+                name, startDate, "emoticons"
+            ),
+            "urls": self.get_twitter_insights_feature(name, startDate, "urls"),
+            "mentionedauthors": self.get_twitter_insights_feature(
+                name, startDate, "mentionedauthors"
+            ),
+        }
         return twitter_insights
 
-    def get_twitter_insights_feature(self, name=None, startDate=None, feature=None, **kwargs):
+    def get_twitter_insights_feature(
+        self, name=None, startDate=None, feature=None, **kwargs
+    ):
         """
         Retrieves the a feature from the twitter insights component.
 
@@ -422,7 +487,7 @@ class BWData:
             raise KeyError("You must pass in a feature")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+feature, params=params)
+        return self.project.get(endpoint="data/" + feature, params=params)
 
     def get_volume_group(self, name=None, startDate=None, **kwargs):
         """
@@ -437,9 +502,13 @@ class BWData:
             A dictionary representation of the volume for group data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/queries/sentiment", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/queries/sentiment", params=params
+        )["results"]
 
-    def get_date_range_comparison(self, name=None, startDate=None, date_ranges=None, **kwargs):
+    def get_date_range_comparison(
+        self, name=None, startDate=None, date_ranges=None, **kwargs
+    ):
         """
         Retrieves the date range data
 
@@ -457,14 +526,18 @@ class BWData:
         """
         query_id = self.ids[name]
         date_range_list = self._get_date_ranges(query_id)
-        date_range_ids = [dr["id"] for dr in date_range_list if dr["name"] in date_ranges]
-        
+        date_range_ids = [
+            dr["id"] for dr in date_range_list if dr["name"] in date_ranges
+        ]
+
         if date_range_ids == [] or date_ranges is None:
             raise KeyError("You must pass in a valid list of date range(s)")
 
         params = self._fill_params(name, startDate, kwargs)
         params["dateRanges"] = date_range_ids
-        return self.project.get(endpoint="data/volume/dateRanges/days", params=params)["results"]
+        return self.project.get(endpoint="data/volume/dateRanges/days", params=params)[
+            "results"
+        ]
 
         ## Channels
 
@@ -481,14 +554,23 @@ class BWData:
         Returns:
             A dictionary representation of the entire facebook analytics component data
         """
-        fb_analytics = {"audience":         self.get_fb_analytics_partial(name, startDate, "audience"),
-                        "ownerActivity":    self.get_fb_analytics_partial(name, startDate, "ownerActivity"),
-                        "audienceActivity": self.get_fb_analytics_partial(name, startDate, "audienceActivity"),
-                        "impressions":      self.get_fb_analytics_partial(name, startDate, "impressions"),
-                        }
+        fb_analytics = {
+            "audience": self.get_fb_analytics_partial(name, startDate, "audience"),
+            "ownerActivity": self.get_fb_analytics_partial(
+                name, startDate, "ownerActivity"
+            ),
+            "audienceActivity": self.get_fb_analytics_partial(
+                name, startDate, "audienceActivity"
+            ),
+            "impressions": self.get_fb_analytics_partial(
+                name, startDate, "impressions"
+            ),
+        }
         return fb_analytics
 
-    def get_fb_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_fb_analytics_partial(
+        self, name=None, startDate=None, metadata_type=None, **kwargs
+    ):
         """
         Retrieves the specified part of the facebook analytics component data.
 
@@ -506,7 +588,9 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
+        return self.project.get(
+            endpoint="data/" + metadata_type + "/queries/days", params=params
+        )["results"][0]["values"]
 
     def get_fb_audience(self, name=None, startDate=None, **kwargs):
         """
@@ -522,7 +606,9 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/topfacebookusers/queries", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/topfacebookusers/queries", params=params
+        )["results"]
 
     def get_fb_comments(self, name=None, startDate=None, **kwargs):
         """
@@ -538,7 +624,9 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/facebookcomments", params=params)["results"]
+        return self.project.get(
+            endpoint="data/mentions/facebookcomments", params=params
+        )["results"]
 
     def get_fb_posts(self, name=None, startDate=None, **kwargs):
         """
@@ -554,7 +642,9 @@ class BWData:
             A list of facebook authors, each having a dictionary representation of their respective facebook data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/facebookposts", params=params)["results"]
+        return self.project.get(endpoint="data/mentions/facebookposts", params=params)[
+            "results"
+        ]
 
     def get_ig_interactions(self, name=None, startDate=None, **kwargs):
         """
@@ -569,11 +659,19 @@ class BWData:
         Returns:
             A dictionary representation of the entire instagram interactions component data.
         """
-        instagram_interactions ={"ownerActivity": self.get_ig_interactions_partial(name, startDate, "ownerActivity"),
-                                 "audienceActivity": self.get_ig_interactions_partial(name, startDate, "audienceActivity")}
+        instagram_interactions = {
+            "ownerActivity": self.get_ig_interactions_partial(
+                name, startDate, "ownerActivity"
+            ),
+            "audienceActivity": self.get_ig_interactions_partial(
+                name, startDate, "audienceActivity"
+            ),
+        }
         return instagram_interactions
 
-    def get_ig_interactions_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_ig_interactions_partial(
+        self, name=None, startDate=None, metadata_type=None, **kwargs
+    ):
         """
         Retrieves the specified part of the instagram interactions component data.
 
@@ -591,7 +689,9 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]
+        return self.project.get(
+            endpoint="data/" + metadata_type + "/queries/days", params=params
+        )["results"][0]
 
     def get_ig_insights(self, name=None, startDate=None, **kwargs):
         """
@@ -606,13 +706,18 @@ class BWData:
         Returns:
             A dictionary representation of the entire instagram owner insights component data.
         """
-        instagram_insights ={"mentionedauthors": self.get_ig_insights_partial(name, startDate, "mentionedauthors"),
-                             "hashtags":         self.get_ig_insights_partial(name, startDate, "hashtags"),
-                             "emoticons":        self.get_ig_insights_partial(name, startDate, "emoticons"),
-                             }
+        instagram_insights = {
+            "mentionedauthors": self.get_ig_insights_partial(
+                name, startDate, "mentionedauthors"
+            ),
+            "hashtags": self.get_ig_insights_partial(name, startDate, "hashtags"),
+            "emoticons": self.get_ig_insights_partial(name, startDate, "emoticons"),
+        }
         return instagram_insights
 
-    def get_ig_insights_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_ig_insights_partial(
+        self, name=None, startDate=None, metadata_type=None, **kwargs
+    ):
         """
         Retrieves the specified part of the instagram owner insights component data.
 
@@ -630,7 +735,9 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type, params=params)["results"]
+        return self.project.get(endpoint="data/" + metadata_type, params=params)[
+            "results"
+        ]
 
     def get_ig_posts(self, name=None, startDate=None, **kwargs):
         """
@@ -664,8 +771,10 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/audience/queries/days", params=params)["results"][0]["values"]
-    
+        return self.project.get(endpoint="data/audience/queries/days", params=params)[
+            "results"
+        ][0]["values"]
+
     def get_tweets(self, name=None, startDate=None, **kwargs):
         """
         Retrieves the twitter tweets component data.
@@ -681,8 +790,10 @@ class BWData:
         """
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/mentions/tweets", params=params)["results"]
-        
+        return self.project.get(endpoint="data/mentions/tweets", params=params)[
+            "results"
+        ]
+
     def get_tw_analytics(self, name=None, startDate=None, **kwargs):
         """
         Retrieves the entire twitter analytics component data.
@@ -696,14 +807,23 @@ class BWData:
         Returns:
             A dictionary representation of the entire twitter analytics component data
         """
-        tw_analytics = {"audience":         self.get_tw_analytics_partial(name, startDate, "audience"),
-                        "ownerActivity":    self.get_tw_analytics_partial(name, startDate, "ownerActivity"),
-                        "audienceActivity": self.get_tw_analytics_partial(name, startDate, "audienceActivity"),
-                        "impressions":      self.get_tw_analytics_partial(name, startDate, "impressions"),
-                        }
+        tw_analytics = {
+            "audience": self.get_tw_analytics_partial(name, startDate, "audience"),
+            "ownerActivity": self.get_tw_analytics_partial(
+                name, startDate, "ownerActivity"
+            ),
+            "audienceActivity": self.get_tw_analytics_partial(
+                name, startDate, "audienceActivity"
+            ),
+            "impressions": self.get_tw_analytics_partial(
+                name, startDate, "impressions"
+            ),
+        }
         return tw_analytics
 
-    def get_tw_analytics_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_tw_analytics_partial(
+        self, name=None, startDate=None, metadata_type=None, **kwargs
+    ):
         """
         Retrieves the specified part of the twitter analytics component data.
 
@@ -721,7 +841,9 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/"+metadata_type+"/queries/days", params=params)["results"][0]["values"]
+        return self.project.get(
+            endpoint="data/" + metadata_type + "/queries/days", params=params
+        )["results"][0]["values"]
 
     def get_tw_audience(self, name=None, startDate=None, **kwargs):
         """
@@ -737,7 +859,9 @@ class BWData:
             A list of twitter authors, each having a dictionary representation of their respective twitter data
         """
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/volume/toptweeters/queries", params=params)["results"]
+        return self.project.get(
+            endpoint="data/volume/toptweeters/queries", params=params
+        )["results"]
 
     def get_dem_summary(self, name=None, startDate=None, **kwargs):
         """
@@ -752,14 +876,17 @@ class BWData:
         Returns:
             A dictionary representation of the entire demographics summary component data
         """
-        dem_summary = {"gender":     self.get_dem_summary_partial(name, startDate, "gender"),
-                       "interest":   self.get_dem_summary_partial(name, startDate, "interest"),
-                       "profession": self.get_dem_summary_partial(name, startDate, "profession"),
-                       "countries":  self.get_dem_summary_partial(name, startDate, "countries"),
-                       }
+        dem_summary = {
+            "gender": self.get_dem_summary_partial(name, startDate, "gender"),
+            "interest": self.get_dem_summary_partial(name, startDate, "interest"),
+            "profession": self.get_dem_summary_partial(name, startDate, "profession"),
+            "countries": self.get_dem_summary_partial(name, startDate, "countries"),
+        }
         return dem_summary
 
-    def get_dem_summary_partial(self, name=None, startDate=None, metadata_type=None, **kwargs):
+    def get_dem_summary_partial(
+        self, name=None, startDate=None, metadata_type=None, **kwargs
+    ):
         """
         Retrieves a specified part of the demographic summary component data extracted from twitter data.
 
@@ -779,7 +906,9 @@ class BWData:
             raise KeyError("You must pass in a metadata_type")
 
         params = self._fill_params(name, startDate, kwargs)
-        return self.project.get(endpoint="data/demographics/"+metadata_type, params=params)
+        return self.project.get(
+            endpoint="data/demographics/" + metadata_type, params=params
+        )
 
     def _get_date_ranges(self, query_id=None):
         """
@@ -793,7 +922,9 @@ class BWData:
             A dictionary representation of the date ranges available for the specified query
 
         """
-        return self.project.get(endpoint="queries/"+str(query_id)+"/"+"date-range")
+        return self.project.get(
+            endpoint="queries/" + str(query_id) + "/" + "date-range"
+        )
 
     def _fill_params(self, name, startDate, data):
         try:
@@ -807,25 +938,41 @@ class BWData:
         for n in name_list:
             if isinstance(n, str):
                 if n not in self.ids:
-                    logger.error("Could not find {} with name {}".format(self.resource_type, n), self.ids)
+                    logger.error(
+                        "Could not find {} with name {}".format(self.resource_type, n),
+                        self.ids,
+                    )
                 else:
                     id_list.append(self.ids[n])
             elif isinstance(n, int):
                 if n not in self.ids.values():
-                    logger.error("Could not find {} with id {}".format(self.resource_type, n), self.ids)
+                    logger.error(
+                        "Could not find {} with id {}".format(self.resource_type, n),
+                        self.ids,
+                    )
                 else:
                     id_list.append(n)
             else:
-                logger.error("Must reference {} with type string or int".format(self.resource_type), n)
+                logger.error(
+                    "Must reference {} with type string or int".format(
+                        self.resource_type
+                    ),
+                    n,
+                )
 
         if len(id_list) == 0:
-            raise RuntimeError("No valid {} ids could be extracted".format(self.resource_type), name)
+            raise RuntimeError(
+                "No valid {} ids could be extracted".format(self.resource_type), name
+            )
 
         filled = {}
         filled[self.resource_id_name] = id_list
         filled["startDate"] = startDate
-        filled["endDate"] = data["endDate"] if "endDate" in data else (
-            datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        filled["endDate"] = (
+            data["endDate"]
+            if "endDate" in data
+            else (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        )
 
         if "orderBy" in data:
             filled["orderBy"] = data["orderBy"]
@@ -846,10 +993,12 @@ class BWData:
         if "errors" in mentions:
             raise KeyError("Mentions GET request failed", mentions)
 
-        return mentions.get('nextCursor', None), mentions["results"]
+        return mentions.get("nextCursor", None), mentions["results"]
 
     def _valid_input(self, param, setting):
-        if (param in filters.params) and (not isinstance(setting, filters.params[param])):
+        if (param in filters.params) and (
+            not isinstance(setting, filters.params[param])
+        ):
             return False
         elif param in filters.special_options:
             setting = setting if isinstance(setting, list) else [setting]
