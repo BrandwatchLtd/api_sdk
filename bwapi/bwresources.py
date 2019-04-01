@@ -1232,18 +1232,27 @@ class BWRules(BWResource):
             KeyError:   If an item in the data_list does not include a name.
             KeyError:   If an item in the data_list does not include a ruleAction.
 
-        Returns:
-            A dictionary of the form {rule1name: rule1id, rule2name: rule2id, ...}
         """
 
-        rules = super(BWRules, self).upload_all(
-            data_list, create_only=False, modify_only=False
+        rules = []
+
+        for rule in data_list:
+            rule = { **rule }
+            if 'filter' in rule:
+                rule['filter'] = {
+                    **rule['filter'],
+                    'projectId': self.project.project_id
+                }
+            rules.append(rule)
+
+        rules_to_id = super(BWRules, self).upload_all(
+            rules, create_only=False, modify_only=False
         )
 
-        for data in data_list:
-            if "backfill" in data and data["backfill"] == True:
+        for rule in rules:
+            if "backfill" in rule and rule["backfill"] == True:
                 self.project.post(
-                    endpoint="bulkactions/rule/" + str(rules[data["name"]])
+                    endpoint="bulkactions/rule/" + str(rules_to_id[rule["name"]])
                 )
 
     def rename(self, name, new_name):
