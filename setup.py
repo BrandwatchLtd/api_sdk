@@ -12,7 +12,7 @@ with open("README.md") as infile:
 
 setup(
     name="bwapi",
-    version="4.0.0",
+    version="4.0.1",
     description="A software development kit for the Brandwatch API",
     long_description=long_description,
     long_description_content_type="text/markdown",

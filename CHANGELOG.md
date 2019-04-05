@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [4.0.1] - 2019-04-05
+### Changed
+* Added project ID to rules that are being uploaded, in accordance with a change to the Brandwatch API.
+
 ## [4.0.0] - 2019-01-23
 ### Changed
 * **Moduel Imports** - All modules (e.g bwproject, bwresources, etc...) have been moved into a single package called `bwapi`. This helps to keep things organised and avoid collisions with any other packages you happen to using. All code dependent on bwapi will need to be updated, such that modules are imported from the `bwapi` package. See the following examples for more specific guidance:
