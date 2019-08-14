@@ -1237,11 +1237,11 @@ class BWRules(BWResource):
         rules = []
 
         for rule in data_list:
-            rule = { **rule }
-            if 'filter' in rule:
-                rule['filter'] = {
-                    **rule['filter'],
-                    'projectId': self.project.project_id
+            rule = {**rule}
+            if "filter" in rule:
+                rule["filter"] = {
+                    **rule["filter"],
+                    "projectId": self.project.project_id,
                 }
             rules.append(rule)
 
