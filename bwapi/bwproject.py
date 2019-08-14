@@ -134,6 +134,7 @@ class BWUser:
         valid_search = self.request(
             verb=requests.get, address="query-validation", params=kwargs
         )
+        return valid_search
 
     def validate_rule_search(self, **kwargs):
         """
@@ -154,6 +155,7 @@ class BWUser:
         valid_search = self.request(
             verb=requests.get, address="query-validation/searchwithin", params=kwargs
         )
+        return valid_search
 
     def request(self, verb, address, params={}, data={}):
         """
@@ -294,7 +296,7 @@ class BWProject(BWUser):
         try:
             int(project)
             numerical = True
-        except:
+        except TypeError:
             numerical = False
 
         for p in projects:

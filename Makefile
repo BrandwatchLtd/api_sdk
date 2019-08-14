@@ -33,7 +33,7 @@ lint: clean
 
 ## run tests with the default Python
 test: lint
-	pipenv run pytest
+	pipenv run pytest -vv --cov=bwapi
 
 ## check code coverage quickly with the default Python
 coverage: clean

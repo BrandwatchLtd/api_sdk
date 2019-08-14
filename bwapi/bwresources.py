@@ -3,10 +3,7 @@ bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCat
 """
 
 import json
-import datetime
 from . import filters
-import requests
-import threading
 from . import bwdata
 import logging
 
@@ -1250,7 +1247,7 @@ class BWRules(BWResource):
         )
 
         for rule in rules:
-            if "backfill" in rule and rule["backfill"] == True:
+            if "backfill" in rule and rule["backfill"]:
                 self.project.post(
                     endpoint="bulkactions/rule/" + str(rules_to_id[rule["name"]])
                 )
