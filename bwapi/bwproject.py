@@ -296,7 +296,7 @@ class BWProject(BWUser):
         try:
             int(project)
             numerical = True
-        except TypeError:
+        except ValueError:
             numerical = False
 
         for p in projects:
