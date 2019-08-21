@@ -32,6 +32,7 @@ class BWResource:
         """
         self.project = bwproject
         self.ids = {}
+        self.names = {}
         self.reload()
 
     def reload(self):
@@ -52,6 +53,10 @@ class BWResource:
 
         self.ids = {
             resource["name"]: resource["id"] for resource in response["results"]
+        }
+
+        self.names = {
+            resource["id"]: resource["name"] for resource in response["results"]
         }
 
     def get(self, name=None):
