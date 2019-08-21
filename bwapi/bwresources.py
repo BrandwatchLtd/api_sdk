@@ -86,28 +86,22 @@ class BWResource:
     
     def get(self, name=None):
         """
-        If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.
-        If you do not specify a name, this function will retrieve all information for all resources of that type as they are stored in Brandwatch.
+        If you specify an ID, this function will retrieve all information for that resource as it is stored in Brandwatch.
+        If you specify a name, this will be mapped to the appropriate ID. An error will be raised if there are two IDs with the name specified.
+        If you do not pass anything in with the `name` argument, this function will retrieve all information for all resources of that type as they are stored in Brandwatch.
 
         Args:
-            name:   Name of the resource that you'd like to retrieve - Optional.  If you do not specify a name, all resources of that type will be retrieved.
+            name: ID or name of the resource that you'd like to retrieve - Optional.  If you do not specify an ID, all resources of that type will be retrieved.
 
         Raises:
-            KeyError:   If you specify a resource name and the resource does not exist.
+            KeyError:   If you specify a resource ID and the resource does not exist.
 
         Returns:
             All information for the specified resource, or a list of information on every resource of that type in the account.
         """
-        if not name:
-            return self.project.get(endpoint=self.general_endpoint)["results"]
-        elif name not in self.ids:
-            raise KeyError(
-                "Could not find " + self.resource_type + ": " + name, self.ids
-            )
-        else:
-            resource_id = self.ids[name]
-            return self.project.get(
-                endpoint=self.specific_endpoint + "/" + str(resource_id)
+        id_num = self.get_resource_id(resource=name)
+        return self.project.get(
+            endpoint=self.specific_endpoint + "/" + str(id_num)
             )
 
     def upload(self, create_only=False, modify_only=False, **kwargs):
