@@ -674,7 +674,10 @@ class BWGroups(BWResource, bwdata.BWData):
             filled["name"] = data["name"]
 
         queries = data["queries"]
-        filled["queries"] = [{"name": q, "id": self.queries.ids[q]} for q in queries]
+        query_ids = [self.queries.get_resource_id(resource=x) for x in queries]
+
+        #now we have a reliable list of ids, we can turn this into a list of dictionaries in the form [{'name': 'MyQuery', 'id': 1111}]
+        filled['queries'] = [{'name':self.queries.names[pk], 'id':pk} for pk in query_ids]
         filled["shared"] = data["shared"] if "shared" in data else "public"
         filled["sharedProjectIds"] = (
             data["sharedProjectIds"]
