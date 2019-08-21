@@ -59,6 +59,31 @@ class BWResource:
             resource["id"]: resource["name"] for resource in response["results"]
         }
 
+    def get_resource_id(self,resource=None):
+        '''
+        Takes in a resource name or ID and returns the ID
+        If no resource is specified, returns None'''
+        if not resource:
+            return "" # return empty string ratherthan none to avoid stringified "None" becoming part of the url of an API call
+        if isinstance(resource, int):
+            if resource not in self.names.keys():
+                raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+            pk = resource 
+        elif isinstance(resource, str):
+            entries = [pk for pk, name in self.names.items() if name == resource]
+            if len(entries) > 1:
+                raise ValueError('The resource name {} is ambiguous: {}'.format(resource, entries))
+            if entries:
+                return entries[0]
+            else:
+                try: 
+                    pk = int(resource)
+                except:
+                    raise ValueError('Could not find the resource name {} in the project'.format(resource))
+        if pk not in self.names.keys():
+            raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+        return pk
+    
     def get(self, name=None):
         """
         If you specify a name, this function will retrieve all information for that resource as it is stored in Brandwatch.
