@@ -31,7 +31,6 @@ class BWResource:
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        # self.ids = {}
         self.names = {}
         self.reload()
 
