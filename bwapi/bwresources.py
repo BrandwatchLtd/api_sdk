@@ -1481,8 +1481,8 @@ class BWRules(BWResource):
             raise KeyError("Need name to and ruleAction to upload rule", data)
 
         # for PUT calls, need id, projectName, queryName in addition to the rest of the data below
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True):
+            filled["id"] = self.get_resource_id(data["name"])
             filled["projectName"] = (
                 data["projectName"]
                 if ("projectName" in data)
