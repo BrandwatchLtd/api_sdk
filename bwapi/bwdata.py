@@ -524,7 +524,7 @@ class BWData:
         Raises:
             KeyError:       If you fail to pass in a date range
         """
-        query_id = self.ids[name]
+        query_id = self.get_resource_id(name)
         date_range_list = self._get_date_ranges(query_id)
         date_range_ids = [
             dr["id"] for dr in date_range_list if dr["name"] in date_ranges
@@ -937,18 +937,16 @@ class BWData:
 
         for n in name_list:
             if isinstance(n, str):
-                if n not in self.ids:
+                if self.get_resource_id(n, check=True) == False:
                     logger.error(
-                        "Could not find {} with name {}".format(self.resource_type, n),
-                        self.ids,
+                        "Could not find {} with name {}".format(self.resource_type, n)
                     )
                 else:
-                    id_list.append(self.ids[n])
+                    id_list.append(self.get_resource_id(n))
             elif isinstance(n, int):
-                if n not in self.ids.values():
+                if self.get_resource_id(n, check=True) == False:
                     logger.error(
-                        "Could not find {} with id {}".format(self.resource_type, n),
-                        self.ids,
+                        "Could not find {} with id {}".format(self.resource_type, n)
                     )
                 else:
                     id_list.append(n)
