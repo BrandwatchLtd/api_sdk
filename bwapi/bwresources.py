@@ -31,7 +31,7 @@ class BWResource:
             bwproject:  Brandwatch project.  This is a BWProject object.
         """
         self.project = bwproject
-        self.ids = {}
+        # self.ids = {}
         self.names = {}
         self.reload()
 
@@ -216,13 +216,14 @@ class BWResource:
         Args:
             names:   A list of the names of the queries that you'd like to delete.
         """
-        for name in names:
-            if name in self.ids:
-                resource_id = self.ids[name]
-                self.project.delete(
-                    endpoint=self.specific_endpoint + "/" + str(resource_id)
-                )
-                logger.info("{} {} deleted".format(self.resource_type, name))
+        pks = [self.get_resource_id(x) for x in names]
+
+        for pk in pks:
+        	if pk in self.names.keys():
+        		self.project.delete(
+        			endpoint=self.specific_endpoint + "/" + str(pk)
+        			)
+        		logger.info("{} {} deleted".format(self.resource_type, self.names[pk]))
 
         self.reload()
 
