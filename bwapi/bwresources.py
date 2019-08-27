@@ -20,7 +20,7 @@ class BWResource:
 
     Attributes:
         project:        Brandwatch project.  This is a BWProject object.
-        ids:            Query ids, organized in a dictionary of the form {query1name: query1id, query2name: query2id, ...}
+        names:            Query names, organized in a dictionary of the form {query1id: query1name, query2id: query2name, ...}
     """
 
     def __init__(self, bwproject):
@@ -49,10 +49,6 @@ class BWResource:
 
         if "results" not in response:
             raise KeyError("Could not retrieve" + self.resource_type, response)
-
-        self.ids = {
-            resource["name"]: resource["id"] for resource in response["results"]
-        }
 
         self.names = {
             resource["id"]: resource["name"] for resource in response["results"]
