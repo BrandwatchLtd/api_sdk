@@ -59,30 +59,53 @@ class BWResource:
             resource["id"]: resource["name"] for resource in response["results"]
         }
 
-    def get_resource_id(self,resource=None):
+    def get_resource_id(self, resource=None, check=False):
         '''
-        Takes in a resource name or ID and returns the ID
-        If no resource is specified, returns None'''
+        args:
+            check: if set to False (default), this method returns the ID of the resource. 
+            	   if set to True, this method will return True or False, depending on whether the resource exists
+            
+        '''
         if not resource:
-            return "" # return empty string ratherthan none to avoid stringified "None" becoming part of the url of an API call
+            if check == False:
+                return "" # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
+            if check == True:
+                raise ValueError('Please supply a resource to check')
         if isinstance(resource, int):
             if resource not in self.names.keys():
-                raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+                if check == False:
+                    raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+                elif check == True:
+                    return False
             pk = resource 
         elif isinstance(resource, str):
             entries = [pk for pk, name in self.names.items() if name == resource]
             if len(entries) > 1:
+                #check status doesn't matter here - it's an error either way
                 raise ValueError('The resource name {} is ambiguous: {}'.format(resource, entries))
             if entries:
-                return entries[0]
+                if check == False:
+                    return entries[0]
+                elif check == True:
+                    return True
             else:
                 try: 
                     pk = int(resource)
                 except:
-                    raise ValueError('Could not find the resource name {} in the project'.format(resource))
+                    if check == False:
+                        raise ValueError('Could not find the resource name {} in the project'.format(resource))
+                    elif check == True:
+                        return False
         if pk not in self.names.keys():
-            raise ValueError('Could not find the resource ID {} in the project'.format(resource))
-        return pk
+            if check == False:
+                raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+            elif check == True:
+                return False
+        if pk:
+            if check == False:
+                return pk
+            elif check == True:
+                return True
     
     def get(self, name=None):
         """
