@@ -161,12 +161,13 @@ class BWResource:
             filled_data = self._fill_data(data)
             name = data["name"]
 
-            if name in self.ids and not create_only:
+            if self.get_resource_id(name,check=True) and not create_only: #if resource does exist
+                pk = self.get_resource_id(name)
                 response = self.project.put(
-                    endpoint=self.specific_endpoint + "/" + str(self.ids[name]),
+                    endpoint=self.specific_endpoint + "/" + str(pk),
                     data=filled_data,
                 )
-            elif name not in self.ids and not modify_only:
+            elif not self.get_resource_id(name,check=True) and not modify_only: #if resource does not exist
                 response = self.project.post(
                     endpoint=self.specific_endpoint, data=filled_data
                 )
@@ -190,12 +191,12 @@ class BWResource:
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if name not in self.ids:
+        if self.get_resource_id(name, check=True) == False: #if the resource does not exist
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
         else:
-            info = self.get(name=name)
+            info = self.get(name=name) # will raise error if ambiguous name provided, so we should be okay to provide a name from this point forward (it won't be ambiguous if we get past this stage)
             info.pop("name")
             self.upload(name=name, new_name=new_name, **info)
 
@@ -315,7 +316,7 @@ class BWQueries(BWResource, bwdata.BWData):
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if name not in self.ids:
+        if self.get_resource_id(name, check=True) == False:
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
@@ -362,8 +363,9 @@ class BWQueries(BWResource, bwdata.BWData):
             A single mention.
         """
         params = self._fill_mention_params(kwargs)
+        pk = self.get_resource_id(kwargs["name"])
         mention = self.project.get(
-            endpoint="query/" + str(self.ids[kwargs["name"]]) + "/mentionfind",
+            endpoint="query/" + str(pk) + "/mentionfind",
             params=params,
         )
 
@@ -457,11 +459,11 @@ class BWQueries(BWResource, bwdata.BWData):
         if ("name" not in data) or ("includedTerms" not in data):
             raise KeyError("Need name and includedTerms to post query", data)
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True): #if resource exists, create value for filled['id']
+            filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
-        else:
+        else: #if resource doesn't exist, add name to filled dictionary
             filled["name"] = data["name"]
 
         filled["includedTerms"] = data["includedTerms"]
@@ -487,9 +489,9 @@ class BWQueries(BWResource, bwdata.BWData):
     def _fill_mention_params(self, data):
         if "name" not in data:
             raise KeyError("Must specify query or group name", data)
-        elif data["name"] not in self.ids:
+        elif self.get_resource_id(data["name"], check=True) == False: #if resource does not exist
             raise KeyError(
-                "Could not find " + self.resource_type + " " + data["name"], self.ids
+                "Could not find " + self.resource_type + " " + data["name"]
             )
         if ("url" not in data) and ("resourceId" not in data):
             raise KeyError("Must provide either a url or a resourceId", data)
@@ -542,7 +544,7 @@ class BWGroups(BWResource, bwdata.BWData):
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if name not in self.ids:
+        if self.get_resource_id(name, check=True) == False:
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
@@ -645,7 +647,7 @@ class BWGroups(BWResource, bwdata.BWData):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(self.tags.ids[s])
+                ids.append(self.tags.get_resource_id(s))
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
@@ -688,8 +690,8 @@ class BWGroups(BWResource, bwdata.BWData):
         if ("name" not in data) or ("queries" not in data):
             raise KeyError("Need name and queries to upload group", data)
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True):#if resource exists, create value for filled['id']
+            filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
             filled["name"] = data["new_name"]
@@ -843,8 +845,8 @@ class BWAuthorLists(BWResource):
         if ("name" not in data) or ("authors" not in data):
             raise KeyError("Need name and authors to upload authorlist", data)
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True): #if resource exists, create value for filled['id']
+            filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
             filled["name"] = data["new_name"]
@@ -894,8 +896,8 @@ class BWSiteLists(BWResource):
         if ("name" not in data) or ("domains" not in data):
             raise KeyError("Need name and domains to upload sitelist", data)
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True): #if resource exists, create value for filled['id']
+            filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
             filled["name"] = data["new_name"]
@@ -946,8 +948,8 @@ class BWLocationLists(BWResource):
         if ("name" not in data) or ("locations" not in data):
             raise KeyError("Need name and locations to upload locationlist", data)
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"], check=True): #if resource exists, create value for filled['id']
+            filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
             filled["name"] = data["new_name"]
@@ -979,7 +981,7 @@ class BWTags(BWResource):
 
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL tags in the project. """
-        self.delete_all(list(self.ids))
+        self.delete_all(list(self.names))
 
     def _fill_data(self, data):
         filled = {}
@@ -988,7 +990,7 @@ class BWTags(BWResource):
             raise KeyError("Need name to upload " + self.parameter, data)
 
         if "new_name" in data:
-            filled["id"] = self.ids.get(data["name"])
+            filled["id"] = self.get_resource_id(data["name"])
             filled["name"] = data["new_name"]
         else:
             filled["name"] = data["name"]
@@ -1316,7 +1318,7 @@ class BWRules(BWResource):
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if name not in self.ids:
+        if self.get_resource_id(name, check=True) ==False: #resource does not exist
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
@@ -1384,7 +1386,7 @@ class BWRules(BWResource):
                 queryName = [queryName]
             fil["queryId"] = []
             for query in queryName:
-                fil["queryId"].append(self.queries.ids[query])
+                fil["queryId"].append(self.queries.get_resource_id(query))
 
         for param in kwargs:
             setting = self._name_to_id(param, kwargs[param])
@@ -1418,8 +1420,8 @@ class BWRules(BWResource):
 
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project. """
-        for name in self.ids:
-            self.project.delete(endpoint="rules/" + str(self.ids[name]))
+        for pk in self.names.keys():
+            self.project.delete(endpoint="rules/" + str(pk))
         self.reload()
 
     def get(self, name=None):
@@ -1434,12 +1436,12 @@ class BWRules(BWResource):
                 ruledata = ruledata["results"]
             else:
                 exit()
-        elif name not in self.ids:
+        elif self.get_resource_id(name, check=True) ==  False:
             raise KeyError(
-                "Could not find " + self.resource_type + ": " + name, self.ids
+                "Could not find " + self.resource_type + ": " + name
             )
         else:
-            resource_id = self.ids[name]
+            resource_id = self.get_resource_id(name)
             ruledata = self.project.get(
                 endpoint=self.specific_endpoint + "/" + str(resource_id)
             )
@@ -1453,10 +1455,8 @@ class BWRules(BWResource):
                 queries = "Whole Project"
             else:
                 queries = []
-                for query in queryIds:
-                    for q in self.queries.ids:
-                        if self.queries.ids[q] == query:
-                            queries.append(q)
+                for q in queryIds:
+                    queries.append(self.queries.names[q]) 
 
             filters = {"queryName": queries}
             for fil in rule["filter"]:
