@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build test
+.PHONY: clean clean-test clean-pyc clean-build test lint coverage upload dist bumpversion-patch bumpversion-minor bumpversion-major install install-dev
 
 ## remove all build, test, coverage and Python artifacts
 clean: clean-build clean-pyc clean-test
