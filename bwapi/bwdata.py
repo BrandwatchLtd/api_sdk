@@ -937,14 +937,14 @@ class BWData:
 
         for n in name_list:
             if isinstance(n, str):
-                if self.get_resource_id(n, check=True) == False:
+                if not self.check_resource_exists(n):
                     logger.error(
                         "Could not find {} with name {}".format(self.resource_type, n)
                     )
                 else:
                     id_list.append(self.get_resource_id(n))
             elif isinstance(n, int):
-                if self.get_resource_id(n, check=True) == False:
+                if not self.check_resource_exists(n):
                     logger.error(
                         "Could not find {} with id {}".format(self.resource_type, n)
                     )
