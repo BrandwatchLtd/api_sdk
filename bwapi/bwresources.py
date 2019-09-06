@@ -1439,10 +1439,7 @@ class BWRules(BWResource):
             if queryIds is None:  # scope = project, so specific queries are not listed
                 queries = "Whole Project"
             else:
-                queries = []
-                for q in queryIds:
-                    queries.append(self.queries.names[q]) 
-
+                queries = [self.queries.names[q] for q in queryIds]
             filters = {"queryName": queries}
             for fil in rule["filter"]:
                 value = rule["filter"].get(fil)
