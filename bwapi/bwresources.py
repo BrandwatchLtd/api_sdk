@@ -65,22 +65,22 @@ class BWResource:
         if isinstance(resource, int):
             if resource not in self.names.keys():
                 raise KeyError('Could not find the resource ID {} in the project'.format(resource))
-            pk = resource 
+            resource_id = resource 
         elif isinstance(resource, str):
-            entries = [pk for pk, name in self.names.items() if name == resource]
+            entries = [resource_id for resource_id, name in self.names.items() if name == resource]
             if len(entries) > 1:
                 raise AmbiguityError('The resource name {} is ambiguous: {}'.format(resource, entries))
             if entries:
                 return entries[0]
             else:
                 try: 
-                    pk = int(resource)
+                    resource_id = int(resource)
                 except:
                     raise ValueError('Could not find the resource name {} in the project'.format(resource))
-        if pk not in self.names.keys():
+        if resource_id not in self.names.keys():
             raise ValueError('Could not find the resource ID {} in the project'.format(resource))
-        if pk:
-            return pk
+        if resource_id:
+            return resource_id
 
     def check_resource_exists(self, resource):
         try:
@@ -149,9 +149,9 @@ class BWResource:
             name = data["name"]
 
             if self.check_resource_exists(name) and not create_only:
-                pk = self.get_resource_id(name)
+                resource_id = self.get_resource_id(name)
                 response = self.project.put(
-                    endpoint=self.specific_endpoint + "/" + str(pk),
+                    endpoint=self.specific_endpoint + "/" + str(resource_id),
                     data=filled_data,
                 )
             elif not self.check_resource_exists(name) and not modify_only: #if resource does not exist
@@ -203,14 +203,14 @@ class BWResource:
         Args:
             names:   A list of the names of the queries that you'd like to delete.
         """
-        pks = [self.get_resource_id(x) for x in names]
+        resource_ids = [self.get_resource_id(x) for x in names]
 
-        for pk in pks:
-            if pk in self.names.keys():
+        for resource_id in resource_ids:
+            if resource_id in self.names.keys():
                 self.project.delete(
-                    endpoint=self.specific_endpoint + "/" + str(pk)
+                    endpoint=self.specific_endpoint + "/" + str(resource_id)
                     )
-                logger.info("{} {} deleted".format(self.resource_type, self.names[pk]))
+                logger.info("{} {} deleted".format(self.resource_type, self.names[resource_id]))
 
         self.reload()
 
@@ -351,9 +351,9 @@ class BWQueries(BWResource, bwdata.BWData):
             A single mention.
         """
         params = self._fill_mention_params(kwargs)
-        pk = self.get_resource_id(kwargs["name"])
+        resource_id = self.get_resource_id(kwargs["name"])
         mention = self.project.get(
-            endpoint="query/" + str(pk) + "/mentionfind",
+            endpoint="query/" + str(resource_id) + "/mentionfind",
             params=params,
         )
 
@@ -688,7 +688,7 @@ class BWGroups(BWResource, bwdata.BWData):
         query_ids = [self.queries.get_resource_id(resource=x) for x in queries]
 
         #now we have a reliable list of ids, we can turn this into a list of dictionaries in the form [{'name': 'MyQuery', 'id': 1111}]
-        filled['queries'] = [{'name':self.queries.names[pk], 'id':pk} for pk in query_ids]
+        filled['queries'] = [{'name':self.queries.names[resource_id], 'id':resource_id} for resource_id in query_ids]
         filled["shared"] = data["shared"] if "shared" in data else "public"
         filled["sharedProjectIds"] = (
             data["sharedProjectIds"]
@@ -1405,8 +1405,8 @@ class BWRules(BWResource):
 
     def clear_all_in_project(self):
         """ WARNING: This is the nuclear option.  Do not use lightly.  It deletes ALL rules in the project. """
-        for pk in self.names.keys():
-            self.project.delete(endpoint="rules/" + str(pk))
+        for resource_id in self.names.keys():
+            self.project.delete(endpoint="rules/" + str(resource_id))
         self.reload()
 
     def get(self, name=None):
