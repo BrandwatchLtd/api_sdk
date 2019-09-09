@@ -935,27 +935,27 @@ class BWData:
         name_list = [name] if isinstance(name, (str, int)) else name
         id_list = []
 
-        for n in name_list:
-            if isinstance(n, str):
-                if not self.check_resource_exists(n):
+        for name in name_list:
+            if isinstance(name, str):
+                if not self.check_resource_exists(name):
                     logger.error(
-                        "Could not find {} with name {}".format(self.resource_type, n)
+                        "Could not find {} with name {}".format(self.resource_type, name)
                     )
                 else:
-                    id_list.append(self.get_resource_id(n))
-            elif isinstance(n, int):
-                if not self.check_resource_exists(n):
+                    id_list.append(self.get_resource_id(name))
+            elif isinstance(name, int):
+                if not self.check_resource_exists(name):
                     logger.error(
-                        "Could not find {} with id {}".format(self.resource_type, n)
+                        "Could not find {} with id {}".format(self.resource_type, name)
                     )
                 else:
-                    id_list.append(n)
+                    id_list.append(name)
             else:
                 logger.error(
                     "Must reference {} with type string or int".format(
                         self.resource_type
                     ),
-                    n,
+                    name,
                 )
 
         if len(id_list) == 0:
