@@ -76,9 +76,9 @@ class BWResource:
                 try: 
                     resource_id = int(resource)
                 except:
-                    raise ValueError('Could not find the resource name {} in the project'.format(resource))
+                    raise KeyError('Could not find the resource name {} in the project'.format(resource))
         if resource_id not in self.names.keys():
-            raise ValueError('Could not find the resource ID {} in the project'.format(resource))
+            raise KeyError('Could not find the resource ID {} in the project'.format(resource))
         if resource_id:
             return resource_id
 
@@ -403,7 +403,7 @@ class BWQueries(BWResource, bwdata.BWData):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(self.tags.ids[s])
+                ids.append(self.tags.get_resource_id(s))
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
@@ -1539,7 +1539,7 @@ class BWRules(BWResource):
                 setting = [setting]
             ids = []
             for s in setting:
-                ids.append(self.tags.ids[s])
+                ids.append(self.tags.get_resource_id(s))
             return ids
 
         elif attribute in ["authorGroup", "xauthorGroup"]:
@@ -1597,10 +1597,7 @@ class BWRules(BWResource):
             return setting
 
         elif attribute in ["tag", "xtag", "addTag", "removeTag"]:
-            for tag in self.tags.ids:
-                name = self.tags.ids[tag]
-                if name == setting:
-                    return name
+            return self.tags.get_resource_id(setting)
 
         elif attribute in [
             "category",
@@ -1631,32 +1628,32 @@ class BWRules(BWResource):
                         return category
 
         elif attribute == "authorGroup" or attribute == "xauthorGroup":
-            authorlists = BWAuthorLists(self.project)
-            for authorlist in authorlists.ids:
+            resource_obj = BWAuthorLists(self.project)
+            for resource_id, resource_name in resource_obj.names.items():
                 for aulist in setting:
-                    if authorlists.ids[authorlist] == aulist:
-                        return authorlist
+                    if resource_id == aulist:
+                        return resource_name
 
         elif attribute == "locationGroup" or attribute == "xlocationGroup":
-            locationlists = BWLocationLists(self.project)
-            for locationlist in locationlists.ids:
-                for loclist in setting:
-                    if locationlists.ids[locationlist] == loclist:
-                        return locationlist
+            resource_obj = BWLocationLists(self.project)
+            for resource_id, resource_name in resource_obj.names.items():
+                for aulist in setting:
+                    if resource_id == aulist:
+                        return resource_name
 
         elif attribute == "authorLocationGroup" or attribute == "xauthorLocationGroup":
-            locationlists = BWLocationLists(self.project)
-            for locationlist in locationlists.ids:
-                for loclist in setting:
-                    if locationlists.ids[locationlist] == loclist:
-                        return locationlist
+            resource_obj = BWLocationLists(self.project)
+            for resource_id, resource_name in resource_obj.names.items():
+                for aulist in setting:
+                    if resource_id == aulist:
+                        return resource_name
 
         elif attribute == "siteGroup" or attribute == "xsiteGroup":
-            sitelists = BWSiteLists(self.project)
-            for sitelist in sitelists.ids:
-                for slist in setting:
-                    if sitelists.ids[sitelist] == slist:
-                        return sitelist
+            resource_obj = BWSiteLists(self.project)
+            for resource_id, resource_name in resource_obj.names.items():
+                for aulist in setting:
+                    if resource_id == aulist:
+                        return resource_name
 
         else:
             return setting
@@ -1699,7 +1696,7 @@ class BWSignals(BWResource):
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if name not in self.ids:
+        if not self.get_resource_id(name):
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
@@ -1732,8 +1729,8 @@ class BWSignals(BWResource):
                     subscriber,
                 )
 
-        if data["name"] in self.ids:
-            filled["id"] = self.ids[data["name"]]
+        if self.get_resource_id(data["name"]):
+            filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
         else:
@@ -1744,7 +1741,7 @@ class BWSignals(BWResource):
             if isinstance(query, int):
                 filled["queryIds"].append(query)
             else:
-                filled["queryIds"].append(self.queries.ids[query])
+                filled["queryIds"].append(self.queries.get_resource_id(query))
 
         filled["subscribers"] = data["subscribers"]
 
@@ -1806,7 +1803,7 @@ class BWSignals(BWResource):
                     # already in ID form
                     ids.append(tag)
                 else:
-                    ids.append(self.tags.ids[tag])
+                    ids.append(self.tags.get_resource_id(tag))
 
             if attribute in ["tag", "includeTagIds"]:
                 return {"includeTagIds": ids}
