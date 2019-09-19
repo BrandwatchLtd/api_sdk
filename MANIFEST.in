@@ -5,4 +5,4 @@ recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-recursive-include bwapi *
+recursive-include src *
