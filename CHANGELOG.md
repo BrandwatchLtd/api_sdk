@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [4.0.2] - 2019-08-27
+### Changed
+* Changed BWResources self.id mapping (where resource names are keys and ids are values) to self.names (where ids are keys and names are values). Made a number of changes that follow from this.
+
 ## [4.0.1] - 2019-04-05
 ### Changed
 * Added project ID to rules that are being uploaded, in accordance with a change to the Brandwatch API.
