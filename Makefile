@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build test
+.PHONY: clean clean-test clean-pyc clean-build test lint coverage upload dist bumpversion-patch bumpversion-minor bumpversion-major install install-dev
 
 ## remove all build, test, coverage and Python artifacts
 clean: clean-build clean-pyc clean-test
@@ -32,15 +32,13 @@ lint: clean
 	pipenv run flake8 bwapi tests --exit-zero
 
 ## run tests with the default Python
-test:
-	pipenv run pytest
+test: lint
+	pipenv run pytest -vv --cov=bwapi
 
 ## check code coverage quickly with the default Python
-coverage:
-	pipenv run coverage run --source bwapi -m pytest
-	pipenv run coverage report -m
-	pipenv run coverage html
-
+coverage: clean
+	pipenv run pytest -vv --cov=bwapi --cov-report html --cov-report term
+	@echo '✨ 🍰 ✨  Open "htmlcov/index.html" in your browser to view report'
 ## upload wheel
 upload: dist
 	pipenv run twine upload -r pypi dist/bwapi*
@@ -76,4 +74,4 @@ install-dev: clean
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: show-help
 show-help:
-	@echo "$$(tput bold)Available rules:$$(tput sgr0)";echo;sed -ne"/^## /{h;s/.*//;:d" -e"H;n;s/^## //;td" -e"s/:.*//;G;s/\\n## /---/;s/\\n/ /g;p;}" ${MAKEFILE_LIST}|LC_ALL='C' sort -f|awk -F --- -v n=$$(tput cols) -v i=19 -v a="$$(tput setaf 6)" -v z="$$(tput sgr0)" '{printf"%s%*s%s ",a,-i,$$1,z;m=split($$2,w," ");l=n-i;for(j=1;j<=m;j++){l-=length(w[j])+1;if(l<= 0){l=n-i-length(w[j])-1;printf"\n%*s ",-i," ";}printf"%s ",w[j];}printf"\n";}'|more $(shell test $(shell uname) == Darwin && echo '-Xr')
+	@echo "$$(tput bold)Available rules:$$(tput sgr0)";echo;sed -ne"/^## /{h;s/.*//;:d" -e"H;n;s/^## //;td" -e"s/:.*//;G;s/\\n## /---/;s/\\n/ /g;p;}" ${MAKEFILE_LIST}|LC_ALL='C' sort -f|awk -F --- -v n=$$(tput cols) -v i=19 -v a="$$(tput setaf 6)" -v z="$$(tput sgr0)" '{printf"%s%*s%s ",a,-i,$$1,z;m=split($$2,w," ");l=n-i;for(j=1;j<=m;j++){l-=length(w[j])+1;if(l<= 0){l=n-i-length(w[j])-1;printf"\n%*s ",-i," ";}printf"%s ",w[j];}printf"\n";}'

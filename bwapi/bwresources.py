@@ -3,19 +3,19 @@ bwresources contains the BWMentions, BWQueries, BWGroups, BWRules, BWTags, BWCat
 """
 
 import json
-import datetime
 from . import filters
-import requests
-import threading
 from . import bwdata
 import logging
 
 
 logger = logging.getLogger("bwapi")
 
+
 class AmbiguityError(ValueError):
-    '''Simple class to make errors when handling resource IDs more clear'''
+    """Simple class to make errors when handling resource IDs more clear"""
+
     pass
+
 
 class BWResource:
     """
@@ -58,27 +58,43 @@ class BWResource:
         }
 
     def get_resource_id(self, resource=None):
-        '''Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)            
-        '''
+        """Takes in a resource ID or name and returns the resource ID. Raises an error if an ambiguous name is provided (e.g. if user calls this function with 'Query1' and there is actually a query and a logo query with that name)
+        """
         if not resource:
-            return "" # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
+            return (
+                ""
+            )  # return empty string rather than none to avoid stringified "None" becoming part of the url of an API call
         if isinstance(resource, int):
             if resource not in self.names.keys():
-                raise KeyError('Could not find the resource ID {} in the project'.format(resource))
-            resource_id = resource 
+                raise KeyError(
+                    "Could not find the resource ID {} in the project".format(resource)
+                )
+            resource_id = resource
         elif isinstance(resource, str):
-            entries = [resource_id for resource_id, name in self.names.items() if name == resource]
+            entries = [
+                resource_id
+                for resource_id, name in self.names.items()
+                if name == resource
+            ]
             if len(entries) > 1:
-                raise AmbiguityError('The resource name {} is ambiguous: {}'.format(resource, entries))
+                raise AmbiguityError(
+                    "The resource name {} is ambiguous: {}".format(resource, entries)
+                )
             if entries:
                 return entries[0]
             else:
-                try: 
+                try:
                     resource_id = int(resource)
-                except:
-                    raise KeyError('Could not find the resource name {} in the project'.format(resource))
+                except ValueError:
+                    raise KeyError(
+                        "Could not find the resource name {} in the project".format(
+                            resource
+                        )
+                    )
         if resource_id not in self.names.keys():
-            raise KeyError('Could not find the resource ID {} in the project'.format(resource))
+            raise KeyError(
+                "Could not find the resource ID {} in the project".format(resource)
+            )
         if resource_id:
             return resource_id
 
@@ -110,9 +126,7 @@ class BWResource:
             All information for the specified resource, or a list of information on every resource of that type in the account.
         """
         id_num = self.get_resource_id(resource=name)
-        return self.project.get(
-            endpoint=self.specific_endpoint + "/" + str(id_num)
-            )
+        return self.project.get(endpoint=self.specific_endpoint + "/" + str(id_num))
 
     def upload(self, create_only=False, modify_only=False, **kwargs):
         """
@@ -154,7 +168,9 @@ class BWResource:
                     endpoint=self.specific_endpoint + "/" + str(resource_id),
                     data=filled_data,
                 )
-            elif not self.check_resource_exists(name) and not modify_only: #if resource does not exist
+            elif (
+                not self.check_resource_exists(name) and not modify_only
+            ):  # if resource does not exist
                 response = self.project.post(
                     endpoint=self.specific_endpoint, data=filled_data
                 )
@@ -178,12 +194,14 @@ class BWResource:
         Raises:
             KeyError:   If the resource does not exist.
         """
-        if not self.check_resource_exists(name): #if the resource does not exist
+        if not self.check_resource_exists(name):  # if the resource does not exist
             raise KeyError(
                 "Cannot rename a " + self.resource_type + " which does not exist", name
             )
         else:
-            info = self.get(name=name) # will raise error if ambiguous name provided, so we should be okay to provide a name from this point forward (it won't be ambiguous if we get past this stage)
+            info = self.get(
+                name=name
+            )  # will raise error if ambiguous name provided, so we should be okay to provide a name from this point forward (it won't be ambiguous if we get past this stage)
             info.pop("name")
             self.upload(name=name, new_name=new_name, **info)
 
@@ -209,8 +227,10 @@ class BWResource:
             if resource_id in self.names.keys():
                 self.project.delete(
                     endpoint=self.specific_endpoint + "/" + str(resource_id)
-                    )
-                logger.info("{} {} deleted".format(self.resource_type, self.names[resource_id]))
+                )
+                logger.info(
+                    "{} {} deleted".format(self.resource_type, self.names[resource_id])
+                )
 
         self.reload()
 
@@ -353,8 +373,7 @@ class BWQueries(BWResource, bwdata.BWData):
         params = self._fill_mention_params(kwargs)
         resource_id = self.get_resource_id(kwargs["name"])
         mention = self.project.get(
-            endpoint="query/" + str(resource_id) + "/mentionfind",
-            params=params,
+            endpoint="query/" + str(resource_id) + "/mentionfind", params=params
         )
 
         if "errors" in mention:
@@ -446,11 +465,13 @@ class BWQueries(BWResource, bwdata.BWData):
 
         if ("name" not in data) or ("includedTerms" not in data):
             raise KeyError("Need name and includedTerms to post query", data)
-        if self.check_resource_exists(data["name"]): #if resource exists, create value for filled['id']
+        if self.check_resource_exists(
+            data["name"]
+        ):  # if resource exists, create value for filled['id']
             filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
-        else: #if resource doesn't exist, add name to filled dictionary
+        else:  # if resource doesn't exist, add name to filled dictionary
             filled["name"] = data["name"]
 
         filled["includedTerms"] = data["includedTerms"]
@@ -476,10 +497,8 @@ class BWQueries(BWResource, bwdata.BWData):
     def _fill_mention_params(self, data):
         if "name" not in data:
             raise KeyError("Must specify query or group name", data)
-        elif not self.check_resource_exists(data["name"]):  #if resource does not exist
-            raise KeyError(
-                "Could not find " + self.resource_type + " " + data["name"]
-            )
+        elif not self.check_resource_exists(data["name"]):  # if resource does not exist
+            raise KeyError("Could not find " + self.resource_type + " " + data["name"])
         if ("url" not in data) and ("resourceId" not in data):
             raise KeyError("Must provide either a url or a resourceId", data)
 
@@ -676,7 +695,9 @@ class BWGroups(BWResource, bwdata.BWData):
         filled = {}
         if ("name" not in data) or ("queries" not in data):
             raise KeyError("Need name and queries to upload group", data)
-        if self.check_resource_exists(data["name"]): #if resource exists, create value for filled['id']
+        if self.check_resource_exists(
+            data["name"]
+        ):  # if resource exists, create value for filled['id']
             filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
@@ -687,8 +708,11 @@ class BWGroups(BWResource, bwdata.BWData):
         queries = data["queries"]
         query_ids = [self.queries.get_resource_id(resource=x) for x in queries]
 
-        #now we have a reliable list of ids, we can turn this into a list of dictionaries in the form [{'name': 'MyQuery', 'id': 1111}]
-        filled['queries'] = [{'name':self.queries.names[resource_id], 'id':resource_id} for resource_id in query_ids]
+        # now we have a reliable list of ids, we can turn this into a list of dictionaries in the form [{'name': 'MyQuery', 'id': 1111}]
+        filled["queries"] = [
+            {"name": self.queries.names[resource_id], "id": resource_id}
+            for resource_id in query_ids
+        ]
         filled["shared"] = data["shared"] if "shared" in data else "public"
         filled["sharedProjectIds"] = (
             data["sharedProjectIds"]
@@ -830,7 +854,9 @@ class BWAuthorLists(BWResource):
 
         if ("name" not in data) or ("authors" not in data):
             raise KeyError("Need name and authors to upload authorlist", data)
-        if self.check_resource_exists(data["name"]): #if resource exists, create value for filled['id']
+        if self.check_resource_exists(
+            data["name"]
+        ):  # if resource exists, create value for filled['id']
             filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
@@ -881,7 +907,9 @@ class BWSiteLists(BWResource):
         if ("name" not in data) or ("domains" not in data):
             raise KeyError("Need name and domains to upload sitelist", data)
 
-        if self.check_resource_exists(data["name"]): #if resource exists, create value for filled['id']
+        if self.check_resource_exists(
+            data["name"]
+        ):  # if resource exists, create value for filled['id']
             filled["id"] = self.get_resource_id(data["name"])
 
         if "new_name" in data:
@@ -1274,11 +1302,11 @@ class BWRules(BWResource):
         rules = []
 
         for rule in data_list:
-            rule = { **rule }
-            if 'filter' in rule:
-                rule['filter'] = {
-                    **rule['filter'],
-                    'projectId': self.project.project_id
+            rule = {**rule}
+            if "filter" in rule:
+                rule["filter"] = {
+                    **rule["filter"],
+                    "projectId": self.project.project_id,
                 }
             rules.append(rule)
 
@@ -1287,7 +1315,7 @@ class BWRules(BWResource):
         )
 
         for rule in rules:
-            if "backfill" in rule and rule["backfill"] == True:
+            if "backfill" in rule and rule["backfill"]:
                 self.project.post(
                     endpoint="bulkactions/rule/" + str(rules_to_id[rule["name"]])
                 )
@@ -1422,9 +1450,7 @@ class BWRules(BWResource):
             else:
                 exit()
         elif not self.check_resource_exists(name):
-            raise KeyError(
-                "Could not find " + self.resource_type + ": " + name
-            )
+            raise KeyError("Could not find " + self.resource_type + ": " + name)
         else:
             resource_id = self.get_resource_id(name)
             ruledata = self.project.get(

@@ -14,7 +14,9 @@ coverage = "*"
 pydocstyle = "*"
 better-exceptions = "*"
 jupyterlab = "*"
-black = "==18.9b0"
+black = "==19.3b0"
+pytest-cov = "*"
+pytest-sugar = "*"
 
 [packages]
 bwapi = {editable = true,path = "."}
