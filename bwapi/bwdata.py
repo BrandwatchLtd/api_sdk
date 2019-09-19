@@ -939,7 +939,9 @@ class BWData:
             if isinstance(name, str):
                 if not self.check_resource_exists(name):
                     logger.error(
-                        "Could not find {} with name {}".format(self.resource_type, name)
+                        "Could not find {} with name {}".format(
+                            self.resource_type, name
+                        )
                     )
                 else:
                     id_list.append(self.get_resource_id(name))
