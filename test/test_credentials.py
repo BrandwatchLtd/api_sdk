@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bwapi.credentials import CredentialsStore
+from bcr.credentials import CredentialsStore
 
 ACCESS_TOKEN = "00000000-0000-0000-0000-000000000000"
 

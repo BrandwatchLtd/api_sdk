@@ -11,8 +11,8 @@ with open("README.md") as infile:
 
 
 setup(
-    name="bwapi",
-    version="4.1.0",
+    name="bcr",
+    version="1.1.0",
     description="A software development kit for the Brandwatch API",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -30,9 +30,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    packages=find_packages(where="src", include=["bwapi"]),
+    packages=find_packages(where="src", include=["bcr"]),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["bwapi-authenticate = bwapi.authenticate:main"]},
+    entry_points={"console_scripts": ["bcr-authenticate = bcr.authenticate:main"]},
     install_requires=requirements,
     tests_require=test_requirements,
     setup_requires=setup_requirements,

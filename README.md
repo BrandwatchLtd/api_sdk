@@ -15,9 +15,9 @@ From the user's perspective, the basic structure of the SDK is as follows.  One 
 
 ## Installation
 
-Be sure to install the latest version of Python 3.x. You can install bwapi on your machine by running the following command:
+Be sure to install the latest version of Python 3.x. You can install bcr on your machine by running the following command:
 
-`pip install bwapi`
+`pip install bcr`
 
 This allows you to run scripts that import bwproject or bwresources from anywhere on your computer. 
 

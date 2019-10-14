@@ -19,4 +19,4 @@ pytest-cov = "*"
 pytest-sugar = "*"
 
 [packages]
-bwapi = {editable = true,path = "."}
+bcr = {editable = true,path = "."}
