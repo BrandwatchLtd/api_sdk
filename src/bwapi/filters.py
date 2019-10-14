@@ -7,8 +7,6 @@ params = {
     "xexactAuthor": str,
     "authorGroup": list,  # user passes in a string which gets converted to a list of ids
     "xauthorGroup": list,  # user passes in a string which gets converted to a list of ids
-    "blogCommentsMin": int,
-    "blogCommentsMax": int,
     "category": list,
     # user passes in a dictionary {parent:[child1, child2, etc]} which gets converted to a list of ids
     "xcategory": list,
@@ -29,12 +27,20 @@ params = {
     "facebookSharesMax": int,
     "resourceType": str,
     "xresourceType": str,
-    "forumPostsMin": int,
-    "forumPostsMax": int,
-    "forumViewsMin": int,
-    "forumViewsMax": int,
     "impactMin": int,
     "impactMax": int,
+    "instagramFollowersMax": int,
+    "instagramFollowersMin": int,
+    "instagramFollowingMax": int,
+    "instagramFollowingMin": int,
+    "instagramPostsMax": int,
+    "instagramPostsMin": int,
+    "instagramLikesMax": int,
+    "instagramLikesMin": int,
+    "instagramCommentsMax": int,
+    "instagramCommentsMin": int,
+    "instagramInteractionsMax": int,
+    "instagramInteractionsMin": int,
     "language": str,
     "xlanguage": str,
     "locationGroup": list,  # user passes in a string which gets converted to a list of ids
@@ -48,28 +54,12 @@ params = {
     "sentiment": str,
     "siteGroup": list,  # user passes in a string which gets converted to a list of ids
     "xsiteGroup": list,  # user passes in a string which gets converted to a list of ids
-    "backlinksMin": int,
-    "backlinksMax": int,
-    "mozRankMin": int,
-    "mozRankMax": int,
     "domain": str,
     "xdomain": str,
-    "pagesPerVisitMin": int,
-    "pagesPerVisitMax": int,
-    "averageVisitsMin": int,
-    "averageVisitsMax": int,
     "monthlyVisitorsMin": int,
     "monthlyVisitorsMax": int,
-    "percentFemaleVisitorsMin": int,
-    "percentMaleVisitorsMin": int,
-    "averageDurationOfVisitMin": int,
-    "averageDurationOfVisitMax": int,
     "tag": list,  # user passes in a string which gets converted to a list of ids
     "xtag": list,  # user passes in a string which gets converted to a list of ids
-    "authorLocationGroup": list,  # user passes in a string which gets converted to a list of ids
-    "xauthorLocationGroup": list,  # user passes in a string which gets converted to a list of ids
-    "authorLocation": str,
-    "xauthorLocation": str,
     "twitterFollowersMin": int,
     "twitterFollowersMax": int,
     "twitterFollowingMin": int,
@@ -82,12 +72,8 @@ params = {
     "twitterPostCountMax": int,
     "twitterRetweetsMin": int,
     "twitterRetweetsMax": int,
-    "reachMin": int,
-    "reachMax": int,
-    "influenceMin": int,
-    "influenceMax": int,
-    "outreachMin": int,
-    "outreachMax": int,
+    "reachEstimateMin": int,
+    "reachEstimateMax": int,
     "twitterVerified": bool,
     "twitterRole": str,
     "twitterAuthorId": int,
@@ -96,7 +82,6 @@ params = {
     "impressionsMax": int,
     "gender": str,
     "accountType": (str, list),  # one or more filters
-    "xaccountType": (str, list),  # one or more filters
     "profession": (str, list),  # one or more filters
     "xprofession": (str, list),  # one or more filters
     "interest": (str, list),  # one or more filters
