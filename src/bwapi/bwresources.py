@@ -1764,7 +1764,7 @@ class BWSignals(BWResource):
                     subscriber,
                 )
 
-        if self.get_resource_id(data["name"]):
+        if self.check_resource_exists(data["name"]):
             filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
