@@ -338,23 +338,6 @@ class BWQueries(BWResource, bwdata.BWData):
                     "We cannot support automated renaming of channels at this time."
                 )
 
-    def backfill(self, query_id, backfill_date):
-        """
-        Backfills a query to a specified date.
-
-        Args:
-            query_id:       Query id
-            backfill_date:  Date that you'd like to backfill the query to (yyy-mm-dd).
-
-        Returns:
-            Server's response to the post request.
-        """
-        backfill_endpoint = "queries/" + str(query_id) + "/backfill"
-        backfill_data = {"minDate": backfill_date, "queryId": query_id}
-        return self.project.post(
-            endpoint=backfill_endpoint, data=json.dumps(backfill_data)
-        )
-
     def get_mention(self, **kwargs):
         """
         Retrieves a single mention by url or resource id.
