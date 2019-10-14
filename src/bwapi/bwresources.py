@@ -263,35 +263,44 @@ class BWQueries(BWResource, bwdata.BWData):
         self.tags = BWTags(self.project)
         self.categories = BWCategories(self.project)
 
-    def upload(self, create_only=False, modify_only=False, backfill_date="", **kwargs):
+    def upload(self, create_only=False, modify_only=False, **kwargs):
         """
         Uploads a query.
 
         Args:
-            create_only:    If True and the query already exists, no action will be triggered - Optional.  Defaults to False.
-            modify_only:    If True and the query does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:  Date which you'd like to backfill the query too (yyyy-mm-dd) - Optional.
-            kwargs:         You must pass in name (string) and includedTerms (string).  You can also optionally pass in languages, type, industry and samplePercent.
+            name: Query name
+            booleanQuery: Query boolean (e.g. "cat AND dog")
+            startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
+            contentSources: Optional, defaults to same sources in UI
+            description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
+            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            query_type: Optional, defaults to 'monitor'
+
+        Raises:
+            KeyError: If you do not pass name and booleanQuery for each query in the data_list.
 
         Returns:
             The uploaded query information in a dictionary of the form {query1name: query1id}
         """
-        return self.upload_all([kwargs], create_only, modify_only, backfill_date)
+        return self.upload_all([kwargs], create_only, modify_only)
 
-    def upload_all(
-        self, data_list, create_only=False, modify_only=False, backfill_date=""
-    ):
+    def upload_all(self, data_list, create_only=False, modify_only=False):
         """
         Uploads multiple queries.
 
         Args:
-            data_list:      You must pass in name (string) and includedTerms (string).  You can also optionally pass in languages, type, industry and samplePercent.
-            create_only:    If True and the query already exists, no action will be triggered - Optional.  Defaults to False.
-            modify_only:    If True and the query does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:  Date which you'd like to backfill the query too (yyyy-mm-dd) - Optional.
+            name: Query name
+            booleanQuery: Query boolean (e.g. "cat AND dog")
+            startDate: Date for query data to be collected from (equivalent to backfill_date in Analytics SDK)
+            contentSources: Optional, defaults to same sources in UI
+            description: Optional, defaults to empty string (e.g. "a query to find mentions about cats and dogs")
+            languages: Optional, defaults to en. Pass in None to make the query language agnostic
+            monitor_sample_percentage: Optional, defaults to 100 (percent)
+            query_type: Optional, defaults to 'monitor'
 
         Raises:
-            KeyError: If you do not pass name and includedTerms for each query in the data_list.
+            KeyError: If you do not pass name and booleanQuery for each query in the data_list.
 
         Returns:
             The uploaded query information in a dictionary of the form {query1name: query1id, query2name: query2id, ...}
@@ -300,16 +309,6 @@ class BWQueries(BWResource, bwdata.BWData):
         queries = super(BWQueries, self).upload_all(
             data_list, create_only=False, modify_only=False
         )
-
-        # backfill if passed in with individual query data
-        for query in data_list:
-            if "backfill_date" in query:
-                self.backfill(queries[query["name"]], query["backfill_date"])
-
-        # backfill if passed in for all
-        if backfill_date != "":
-            for query in queries:
-                self.backfill(queries[query], backfill_date)
 
         return queries
 
@@ -574,7 +573,6 @@ class BWGroups(BWResource, bwdata.BWData):
         query_data_list,
         create_only=False,
         modify_only=False,
-        backfill_date="",
         **kwargs
     ):
         """
@@ -585,14 +583,13 @@ class BWGroups(BWResource, bwdata.BWData):
             query_data_list:    List of dictionaries, where each dictionary includes the information for one query in the following format {name: queryname, includedTerms: searchstring}
             create_only:        If True and the group already exists, no action will be triggered - Optional.  Defaults to False.
             modify_only:        If True and the group does not exist, no action will be triggered - Optional.  Defaults to False.
-            backfill_date:      Date which you'd like to backfill the queries too (yyyy-mm-dd) - Optional.
             kwargs:             You can pass in shared, sharedProjectIds and users - Optional.
 
         Returns:
             The uploaded group information in a dictionary of the form {groupname: groupid}
         """
         kwargs["queries"] = self.queries.upload_all(
-            query_data_list, create_only, modify_only, backfill_date
+            query_data_list, create_only, modify_only
         )
         kwargs["name"] = group_name
         return self.upload(create_only, modify_only, **kwargs)
