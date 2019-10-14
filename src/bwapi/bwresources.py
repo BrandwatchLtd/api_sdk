@@ -461,37 +461,63 @@ class BWQueries(BWResource, bwdata.BWData):
             return setting
 
     def _fill_data(self, data):
-        filled = {}
 
-        if ("name" not in data) or ("includedTerms" not in data):
-            raise KeyError("Need name and includedTerms to post query", data)
-        if self.check_resource_exists(
-            data["name"]
-        ):  # if resource exists, create value for filled['id']
+        default_content_sources = [
+            "qq",
+            "news",
+            "youtube",
+            "forum",
+            "twitter",
+            "review",
+            "facebook",
+            "reddit",
+            "tumblr",
+            "instagram",
+            "blog",
+        ]
+
+        filled = dict()
+
+        if ("name" not in data) or ("booleanQuery" not in data):
+            raise KeyError("Need name and booleanQuery to post query", data)
+
+        filled["booleanQuery"] = data["booleanQuery"]
+
+        # if resource exists, create value for filled['id']
+        if self.check_resource_exists(data["name"]):
             filled["id"] = self.get_resource_id(data["name"])
         if "new_name" in data:
             filled["name"] = data["new_name"]
         else:  # if resource doesn't exist, add name to filled dictionary
             filled["name"] = data["name"]
 
-        filled["includedTerms"] = data["includedTerms"]
-        filled["languages"] = data["languages"] if "languages" in data else ["en"]
-        filled["type"] = data["type"] if "type" in data else "search string"
-        filled["industry"] = (
-            data["industry"] if "industry" in data else "general-(recommended)"
-        )
-        filled["samplePercent"] = (
-            data["samplePercent"] if "samplePercent" in data else 100
-        )
-        filled["languageAgnostic"] = (
-            data["languageAgnostic"] if "languageAgnostic" in data else False
-        )
+        # params with default values
+        filled["type"] = data.get("query_type", "monitor")
+        filled["contentSources"] = data.get("contentSources", default_content_sources)
+        filled["monitorSamplePercentage"] = data.get("monitorSamplePercentage", 100)
+        filled["description"] = data.get("description", "")
+        # currently languages field defaults to 'en', similar to UI, but it could alternatively default to False, to create a language agnostic query
+        filled["languages"] = data.get(
+            "languages", "en"
+        )  # BUG: Might need to turn single item into list
+        # If user passes in string to languages parameter, turn into a list containing only that string
+        if isinstance(filled["languages"], str):
+            filled["languages"] = [filled["languages"]]
+
+        # optional params, with no defaults
+        if "startDate" in data:
+            filled["startDate"] = data["startDate"]
+
+        # set languageAgnostic to True if user explicitly passes in `None` within `languages` parameter
+        if "language" in data:
+            filled["languageAgnostic"] = False
+        if "language" not in data:
+            filled["languageAgnostic"] = True
 
         # validating the query search - comment this out to skip validation
         self.project.validate_query_search(
-            query=filled["includedTerms"], language=filled["languages"]
+            query=filled["booleanQuery"], language=filled["languages"]
         )
-
         return json.dumps(filled)
 
     def _fill_mention_params(self, data):
