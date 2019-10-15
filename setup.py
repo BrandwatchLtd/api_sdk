@@ -12,13 +12,13 @@ with open("README.md") as infile:
 
 setup(
     name="bcr",
-    version="1.1.0",
-    description="A software development kit for the Brandwatch API",
+    version="1.0.0",
+    description="A client library for the Brandwatch Consumer Research API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/BrandwatchLtd/api_sdk",
-    author="Amy Barker, Jamie Lebovics, Paul Siegel and Jessica Bowden",
-    author_email="amyb@brandwatch.com, paul@brandwatch.com, jess@brandwatch.com",
+    author="Paul Siegel, Matthew Franglen, Colin Sullivan, Hamish Morgan and Peter Fairfax",
+    author_email="paul@brandwatch.com, matthew@brandwatch.com, csullivan@brandwatch.com, peterf@brandwatch.com",
     license="License :: OSI Approved :: MIT License",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
