@@ -2,6 +2,10 @@
 
 # Brandwatch API SDK
 
+## Note
+
+This library is intended for use with the Brandwatch Analytics API. Brandwatch Analytics has been succeeded by Brandwatch Consumer Research, which has its own [Python API client library](https://github.com/BrandwatchLtd/bcr-api).
+
 ## Introduction
 
 The Brandwatch API SDK was designed to address many of the challenges involved in building complex applications which interact with RESTful API's in general and Brandwatch's API from Python 3, in particular:
