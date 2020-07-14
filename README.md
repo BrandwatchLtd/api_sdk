@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.com/BrandwatchLtd/api_sdk.svg?branch=master)](https://travis-ci.com/BrandwatchLtd/api_sdk)
 
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
 # Brandwatch API SDK (Deprecated)
 
 ## Deprecation note
