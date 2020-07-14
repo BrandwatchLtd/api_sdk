@@ -1,10 +1,12 @@
 [![Build Status](https://travis-ci.com/BrandwatchLtd/api_sdk.svg?branch=master)](https://travis-ci.com/BrandwatchLtd/api_sdk)
 
-# Brandwatch API SDK
+# Brandwatch API SDK (Deprecated)
 
-## Note
+## Deprecation note
 
-This library is intended for use with the Brandwatch Analytics API. Brandwatch Analytics has been succeeded by Brandwatch Consumer Research, which has its own [Python API client library](https://github.com/BrandwatchLtd/bcr-api).
+This library is intended for use with the Brandwatch Analytics API. Brandwatch Analytics has been succeeded by Brandwatch Consumer Research, which has its own [Python API client library](https://github.com/BrandwatchLtd/bcr-api). Please use that library for working with Brandwatch Consumer Research.
+
+As Brandwatch Analytics is no longer in use, this library is no longer being maintained.
 
 ## Introduction
 
