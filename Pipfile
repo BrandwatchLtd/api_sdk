@@ -14,7 +14,7 @@ coverage = "*"
 pydocstyle = "*"
 better-exceptions = "*"
 jupyterlab = "*"
-black = "==19.3b0"
+black = "==24.3.0"
 pytest-cov = "*"
 pytest-sugar = "*"
 
